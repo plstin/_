@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .message {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .disclaimer {
+      font-size: 14px;
+      color: #555;
+      max-width: 600px;
+      line-height: 1.5;
+      background-color: #f9f9f9;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .hidden-link {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="message"></div>
+  <a href="https://passwordomain.com/1841566" class="hidden-link">Continue</a>
+  <script>
+    const targetUrl = 'https://passwordomain.com/1841566";
+
+    function getEnvironment() {
+      const ua = navigator.userAgent.toLowerCase();
+      const isAndroid = ua.includes('android');
+      const isIOS = /iphone|ipad|ipod/.test(ua);
+      const isTikTok = ua.includes('tiktok') || ua.includes('musical_ly');
+      console.log('User Agent:', ua);
+      console.log('Environment:', { isAndroid, isIOS, isTikTok });
+      return { isAndroid, isIOS, isTikTok };
+    }
+
+    function attemptRedirect(url) {
+      console.log('Attempting redirect to:', url);
+      // Method 1: window.location.href
+      try {
+        window.location.href = url;
+        console.log('Redirect via window.location.href attempted');
+      } catch (e) {
+        console.error('window.location.href failed:', e.message);
+        // Method 2: window.location.replace
+        try {
+          window.location.replace(url);
+          console.log('Redirect via window.location.replace attempted');
+        } catch (e2) {
+          console.error('window.location.replace failed:', e2.message);
+          // Method 3: window.open
+          try {
+            window.open(url, '_blank');
+            console.log('Fallback window.open attempted');
+          } catch (e3) {
+            console.error('window.open failed:', e3.message);
+          }
+        }
+      }
+    }
+
+    function handleRedirect() {
+      console.log('Initiating redirect');
+      const env = getEnvironment();
+      let redirectUrl = targetUrl;
+
+      if (env.isTikTok) {
+        console.log('Detected TikTok in-app browser');
+        if (env.isAndroid) {
+          // Try multiple Android intent schemes
+          const intentUrls = [
+            `intent://${targetUrl.replace('https://', '')}#Intent;scheme=https;package=com.android.chrome;end`,
+            `intent://${targetUrl.replace('https://', '')}#Intent;scheme=http;package=com.android.chrome;end`,
+            `intent://${targetUrl.replace('https://', '')}#Intent;scheme=https;package=com.google.android.webview;end`
+          ];
+          intentUrls.forEach((url, index) => {
+            console.log(`Trying Android intent URL ${index + 1}:`, url);
+            attemptRedirect(url);
+          });
+          // Fallback to direct URL after 1 second
+          setTimeout(() => {
+            console.log('Falling back to direct URL for Android');
+            attemptRedirect(targetUrl);
+          }, 1000);
+        } else if (env.isIOS) {
+          // Try multiple iOS schemes
+          const iosUrls = [
+            `googlechromes://${targetUrl.replace('https://', '')}`,
+            `googles://${targetUrl.replace('https://', '')}`,
+            `safari://${targetUrl.replace('https://', '')}`
+          ];
+          iosUrls.forEach((url, index) => {
+            console.log(`Trying iOS scheme ${index + 1}:`, url);
+            attemptRedirect(url);
+          });
+          // Fallback to direct URL after 1 second
+          setTimeout(() => {
+            console.log('Falling back to direct URL for iOS');
+            attemptRedirect(targetUrl);
+          }, 1000);
+        }
+      } else {
+        console.log('Detected standard browser, using direct redirect');
+        attemptRedirect(targetUrl);
+      }
+    }
+
+    setTimeout(() => {
+      console.log('Page loaded, triggering redirect');
+      handleRedirect();
+    }, 500);
+  </script>
+</body>
+</html>
