@@ -1,186 +1,94 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OGAds Offerwall</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f0f2f5;
-      color: #222;
-    }
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f0f2f5;
+  color: #222;
+}
 
-    header {
-      background: #1446FF;
-      color: #fff;
-      padding: 12px 20px;
-      font-weight: bold;
-      text-align: center;
-    }
+header {
+  background: #1446FF;
+  color: #fff;
+  padding: 12px 20px;
+  font-weight: bold;
+  text-align: center;
+}
 
-    main {
-      padding: 20px;
-      max-width: 1000px;
-      margin: auto;
-    }
+main {
+  padding: 20px;
+  max-width: 1000px;
+  margin: auto;
+}
 
-    #offerList {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr); /* 4 per row */
-      gap: 20px;
-    }
+#offerList {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 per row */
+  gap: 14px; /* slightly smaller gap */
+}
 
-    .offer-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
+.offer-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
 
-    .offer-card:hover {
-      transform: scale(1.03);
-    }
+.offer-card:hover {
+  transform: scale(1.02);
+}
 
-    .offer-card img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 10px;
-      margin-bottom: 12px;
-    }
+.offer-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
 
-    .offer-title {
-      font-size: 15px;
-      font-weight: bold;
-      margin-bottom: 6px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+.offer-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-    .offer-desc {
-      font-size: 13px;
-      color: #555;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-    }
+.offer-desc {
+  font-size: 12px;
+  color: #555;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
 
-    #loading {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 16px;
-    }
+#loading {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 16px;
+}
 
-    /* Optional: Responsive stack on small screens */
-    @media (max-width: 800px) {
-      #offerList {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
+/* Responsive fallback */
+@media (max-width: 900px) {
+  #offerList {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
 
-    @media (max-width: 480px) {
-      #offerList {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
-</head>
-<body>
-  <header>Complete Offers to Earn Rewards</header>
-  <main>
-    <div id="offerList"></div>
-    <div id="loading">Loading offers...</div>
-  </main>
+@media (max-width: 600px) {
+  #offerList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 
-  <script>
-    const offerList = document.getElementById("offerList");
-    const loading = document.getElementById("loading");
-
-    const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
-
-    function createOfferCard(offer) {
-      const card = document.createElement("div");
-      card.className = "offer-card";
-
-      const img = document.createElement("img");
-      img.src = offer.picture || "";
-      card.appendChild(img);
-
-      const title = document.createElement("div");
-      title.className = "offer-title";
-      title.textContent = offer.name_short || offer.name;
-      card.appendChild(title);
-
-      const desc = document.createElement("div");
-      desc.className = "offer-desc";
-      desc.textContent =
-        offer.adcopy ||
-        offer.description ||
-        "Complete this offer to earn rewards!";
-      card.appendChild(desc);
-
-      card.onclick = () => window.open(offer.link, "_blank");
-
-      return card;
-    }
-
-    async function fetchOffers() {
-      try {
-        const ipResponse = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipResponse.json();
-        const userIp = ipData.ip;
-        const userAgent = navigator.userAgent;
-
-        const apiUrl = new URL("https://unlockcontent.net/api/v2");
-        apiUrl.searchParams.append("ip", userIp);
-        apiUrl.searchParams.append("user_agent", userAgent);
-        apiUrl.searchParams.append("limit", "1000");
-        apiUrl.searchParams.append("ctype", "0");
-
-        const response = await fetch(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-          },
-        });
-
-        if (!response.ok)
-          throw new Error(`HTTP error! Status: ${response.status}`);
-
-        const data = await response.json();
-        loading.style.display = "none";
-
-        if (!data.offers || !data.offers.length) {
-          offerList.innerHTML = "<p>No offers available right now.</p>";
-          return;
-        }
-
-        // Sort offers by payout descending (highest payout first)
-        const sortedOffers = data.offers.sort(
-          (a, b) => parseFloat(b.payout) - parseFloat(a.payout)
-        );
-
-        sortedOffers.forEach((offer) => {
-          const card = createOfferCard(offer);
-          offerList.appendChild(card);
-        });
-      } catch (error) {
-        console.error("Error fetching offers:", error);
-        loading.textContent = "Failed to load offers: " + error.message;
-      }
-    }
-
-    // Load on page
-    fetchOffers();
-  </script>
-</body>
-</html>
+@media (max-width: 400px) {
+  #offerList {
+    grid-template-columns: 1fr;
+  }
+}
