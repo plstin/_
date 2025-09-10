@@ -20,7 +20,7 @@
 
     #offerList {
       display: grid;
-      grid-template-columns: repeat(4, 1fr); /* 4 offers per row */
+      grid-template-columns: repeat(4, 1fr); /* 4 offers per row on large screens */
       gap: 14px;
     }
 
@@ -42,8 +42,8 @@
     }
 
     .offer-card img {
-      width: 30%;
-      height: 90px; /* 👈 Smaller image */
+      width: 100%;
+      height: 90px;
       object-fit: cover;
       border-radius: 8px;
       margin-bottom: 10px;
@@ -73,14 +73,14 @@
       font-size: 16px;
     }
 
-    /* Responsive fallback for smaller screens */
-    @media (max-width: 900px) {
+    /* Responsive fallback */
+    @media (max-width: 1000px) {
       #offerList {
         grid-template-columns: repeat(3, 1fr);
       }
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 700px) {
       #offerList {
         grid-template-columns: repeat(2, 1fr);
       }
