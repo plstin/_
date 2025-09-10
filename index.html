@@ -1,137 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title></title>
-  <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #ffffff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-
-    .message {
-      font-size: 24px;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 20px;
-    }
-
-    .disclaimer {
-      font-size: 14px;
-      color: #555;
-      max-width: 600px;
-      line-height: 1.5;
-      background-color: #f9f9f9;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-    }
-
-    .hidden-link {
-      display: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OGAds Offerwall</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; color: #222; }
+  header { background: #1446FF; color: #fff; padding: 12px 20px; font-weight: bold; text-align: center; }
+  main { padding: 20px; max-width: 1000px; margin: auto; }
+  #offerList { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .offer-card { background: #fff; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s ease; }
+  .offer-card:hover { transform: scale(1.03); }
+  .offer-card img { width: 100%; height: 150px; object-fit: cover; border-radius: 10px; }
+  .offer-title { font-size: 16px; margin: 10px 0 6px 0; font-weight: bold; }
+  .offer-desc { font-size: 14px; color: #555; margin-bottom: 8px; }
+  .offer-payout { font-size: 14px; color: green; font-weight: bold; }
+  #loading { text-align: center; margin-top: 20px; font-size: 16px; }
+</style>
 </head>
 <body>
-  <div class="message">...</div>
-  <a href="https://passwordomain.com/1841566" class="hidden-link">Continue</a>
-  <script>
-    const targetUrl = 'https://passwordomain.com/1841566';
+<header>Complete Offers to Earn Rewards</header>
+<main>
+  <div id="offerList"></div>
+  <div id="loading">Loading offers...</div>
+</main>
 
-    function getEnvironment() {
-      const ua = navigator.userAgent.toLowerCase();
-      const isAndroid = ua.includes('android');
-      const isIOS = /iphone|ipad|ipod/.test(ua);
-      const isTikTok = ua.includes('tiktok') || ua.includes('musical_ly');
-      console.log('User Agent:', ua);
-      console.log('Environment:', { isAndroid, isIOS, isTikTok });
-      return { isAndroid, isIOS, isTikTok };
-    }
+<script>
+const offerList = document.getElementById("offerList");
+const loading = document.getElementById("loading");
 
-    function attemptRedirect(url) {
-      console.log('Attempting redirect to:', url);
-      // Method 1: window.location.href
-      try {
-        window.location.href = url;
-        console.log('Redirect via window.location.href attempted');
-      } catch (e) {
-        console.error('window.location.href failed:', e.message);
-        // Method 2: window.location.replace
-        try {
-          window.location.replace(url);
-          console.log('Redirect via window.location.replace attempted');
-        } catch (e2) {
-          console.error('window.location.replace failed:', e2.message);
-          // Method 3: window.open
-          try {
-            window.open(url, '_blank');
-            console.log('Fallback window.open attempted');
-          } catch (e3) {
-            console.error('window.open failed:', e3.message);
-          }
-        }
+// OGAds API key
+const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
+
+// Function to create offer cards using API variable names
+function createOfferCard(offer) {
+  const card = document.createElement("div");
+  card.className = "offer-card";
+
+  const img = document.createElement("img");
+  img.src = offer.picture || "";
+  card.appendChild(img);
+
+  const title = document.createElement("div");
+  title.className = "offer-title";
+  title.textContent = offer.name_short || offer.name;
+  card.appendChild(title);
+
+  const desc = document.createElement("div");
+  desc.className = "offer-desc";
+  desc.textContent = offer.adcopy || offer.description || "Complete this offer to earn rewards!";
+  card.appendChild(desc);
+
+  const payout = document.createElement("div");
+  payout.className = "offer-payout";
+  payout.textContent = `$${offer.payout || "0.00"}`;
+  card.appendChild(payout);
+
+  // Open offer link
+  card.onclick = () => window.open(offer.link, "_blank");
+
+  return card;
+}
+
+async function fetchOffers() {
+  try {
+    // Get user's IP
+    const ipResponse = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipResponse.json();
+    const userIp = ipData.ip;
+
+    // Get user-agent
+    const userAgent = navigator.userAgent;
+
+    // Build API URL
+    const apiUrl = new URL('https://unlockcontent.net/api/v2');
+    apiUrl.searchParams.append('ip', userIp);
+    apiUrl.searchParams.append('user_agent', userAgent);
+    apiUrl.searchParams.append('limit', '1000'); // High limit
+    apiUrl.searchParams.append('ctype', '0'); // 0 = all offer types
+
+    // Fetch offers
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`
       }
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+    const data = await response.json();
+    loading.style.display = "none";
+
+    if (!data.offers || !data.offers.length) {
+      offerList.innerHTML = "<p>No offers available right now.</p>";
+      return;
     }
 
-    function handleRedirect() {
-      console.log('Initiating redirect');
-      const env = getEnvironment();
-      let redirectUrl = targetUrl;
+    data.offers.forEach(offer => {
+      const card = createOfferCard(offer);
+      offerList.appendChild(card);
+    });
 
-      if (env.isTikTok) {
-        console.log('Detected TikTok in-app browser');
-        if (env.isAndroid) {
-          // Try multiple Android intent schemes
-          const intentUrls = [
-            `intent://${targetUrl.replace('https://', '')}#Intent;scheme=https;package=com.android.chrome;end`,
-            `intent://${targetUrl.replace('https://', '')}#Intent;scheme=http;package=com.android.chrome;end`,
-            `intent://${targetUrl.replace('https://', '')}#Intent;scheme=https;package=com.google.android.webview;end`
-          ];
-          intentUrls.forEach((url, index) => {
-            console.log(`Trying Android intent URL ${index + 1}:`, url);
-            attemptRedirect(url);
-          });
-          // Fallback to direct URL after 1 second
-          setTimeout(() => {
-            console.log('Falling back to direct URL for Android');
-            attemptRedirect(targetUrl);
-          }, 1000);
-        } else if (env.isIOS) {
-          // Try multiple iOS schemes
-          const iosUrls = [
-            `googlechromes://${targetUrl.replace('https://', '')}`,
-            `googles://${targetUrl.replace('https://', '')}`,
-            `safari://${targetUrl.replace('https://', '')}`
-          ];
-          iosUrls.forEach((url, index) => {
-            console.log(`Trying iOS scheme ${index + 1}:`, url);
-            attemptRedirect(url);
-          });
-          // Fallback to direct URL after 1 second
-          setTimeout(() => {
-            console.log('Falling back to direct URL for iOS');
-            attemptRedirect(targetUrl);
-          }, 1000);
-        }
-      } else {
-        console.log('Detected standard browser, using direct redirect');
-        attemptRedirect(targetUrl);
-      }
-    }
+  } catch (error) {
+    console.error("Error fetching offers:", error);
+    loading.textContent = "Failed to load offers: " + error.message;
+  }
+}
 
-    setTimeout(() => {
-      console.log('Page loaded, triggering redirect');
-      handleRedirect();
-    }, 500);
-  </script>
+// Run on page load
+fetchOffers();
+</script>
 </body>
 </html>
