@@ -27,7 +27,7 @@
     }
 
     #flagContainer img {
-      width: 60px; /* adjust size */
+      width: 60px;
       height: auto;
       border-radius: 5px;
     }
@@ -38,9 +38,16 @@
       border-right: 5px solid #ff9900; /* bright orange accent line */
       padding: 15px 20px;
       border-radius: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       font-size: 14px;
       line-height: 1.6;
+    }
+
+    /* Reminder line */
+    #reminderLine {
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 20px;
     }
 
     /* Offer grid */
@@ -70,7 +77,7 @@
       height: 90px;
       object-fit: cover;
       border-radius: 8px;
-      margin-left: 10px; /* spacing for RTL */
+      margin-left: 10px;
       flex-shrink: 0;
     }
 
@@ -102,7 +109,6 @@
       font-size: 16px;
     }
 
-    /* Responsive fallback */
     @media (max-width: 1000px) {
       #offerList {
         grid-template-columns: repeat(3, 1fr);
@@ -144,6 +150,11 @@
     <!-- Info Box -->
     <div id="infoBox">
       السلام عليكم، قمت بالانضمام إلى برنامج إلكتروني يتيح لأي شخص عرض خدمات بعض الشركات والمواقع الإلكترونية، كما ترون أسفله، وستقوم بمكافأتي مادياً عند تسجيلكم في خدماتها من طرفي، الأمر مجاني ولا يتطلب أكثر من دقيقة، كلما تسجلتم في خدمات أكثر كلما استفدت أنا أكثر، وأرجو منكم الدعاء لأمي وأبي بالمغفرة.
+    </div>
+
+    <!-- Reminder line -->
+    <div id="reminderLine">
+      حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأن خدمات جديدة تستمر في الظهور
     </div>
 
     <div id="offerList"></div>
