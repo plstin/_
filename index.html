@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -18,6 +18,18 @@
       margin: auto;
     }
 
+    /* Info Box */
+    #infoBox {
+      background-color: #fff9e6; /* light yellow */
+      border-left: 5px solid #f4c542; /* accent color */
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Offer grid */
     #offerList {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -32,7 +44,7 @@
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
       transition: transform 0.2s ease;
       display: flex;
-      align-items: center; /* image and text vertically centered */
+      align-items: center;
     }
 
     .offer-card:hover {
@@ -40,7 +52,7 @@
     }
 
     .offer-card img {
-      width: 30%; /* image width */
+      width: 30%;
       height: 90px;
       object-fit: cover;
       border-radius: 8px;
@@ -49,7 +61,7 @@
     }
 
     .offer-text {
-      width: 70%; /* text takes remaining space */
+      width: 70%;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -59,14 +71,14 @@
       font-size: 14px;
       font-weight: bold;
       margin-bottom: 4px;
-      white-space: normal; /* wrap text */
+      white-space: normal;
       overflow: visible;
     }
 
     .offer-desc {
       font-size: 12px;
       color: #555;
-      white-space: normal; /* wrap text */
+      white-space: normal;
       overflow: visible;
     }
 
@@ -94,7 +106,7 @@
         grid-template-columns: 1fr;
       }
       .offer-card {
-        flex-direction: column; /* stack image on top on small screens */
+        flex-direction: column;
         align-items: flex-start;
       }
       .offer-card img {
@@ -110,6 +122,11 @@
 </head>
 <body>
   <main>
+    <!-- Info Box -->
+    <div id="infoBox">
+      السلام عليكم، قمت بالانضمام إلى برنامج إلكتروني يتيح لأي شخص عرض خدمات بعض الشركات والمواقع الإلكترونية، كما ترون أسفله، وستقوم بمكافأتي مادياً عند تسجيلكم في خدماتها، الأمر مجاني ولا يتطلب أكثر من دقيقة، كلما تسجلتم في خدمات أكثر كلما استفدت أنا أكثر، وأرجو منكم الدعاء لأمي وأبي بالمغفرة.
+    </div>
+
     <div id="offerList"></div>
     <div id="loading">Loading offers...</div>
   </main>
