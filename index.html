@@ -194,7 +194,9 @@
         const res = await fetch(offersUrl);
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.offers || []);
-        return list.filter(o => parseFloat(o.payout) >= 0.5);
+        return list
+          .filter(o => parseFloat(o.payout) >= 0.5)
+          .filter(o => (o.adcopy || o.description || "") !== "Enter your information now for a chance to win.");
       } catch (err) {
         console.error("Fetch error CPA Grip:", err);
         return [];
@@ -226,7 +228,9 @@
         const data = await response.json();
         if (!data.offers) return [];
 
-        return data.offers.filter(o => parseFloat(o.payout) >= 0.5);
+        return data.offers
+          .filter(o => parseFloat(o.payout) >= 0.5)
+          .filter(o => (o.adcopy || o.description || "") !== "Enter your information now for a chance to win.");
       } catch (err) {
         console.error("Fetch error OGAds:", err);
         return [];
