@@ -1,212 +1,265 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>يوسف</title>
-<style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  background: #f0f2f5;
-  color: #222;
-  direction: rtl;
-  text-align: right;
-}
-main {
-  padding: 20px;
-  max-width: 1000px;
-  margin: auto;
-}
-#flagContainer {
-  text-align: center;
-  margin-bottom: 10px;
-}
-#flagContainer img {
-  width: 60px;
-  height: auto;
-  border-radius: 5px;
-}
-#infoBox {
-  background-color: #fff9e6;
-  border-right: 5px solid #ff9900;
-  padding: 15px 20px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  font-size: 14px;
-  line-height: 1.6;
-}
-#reminderLine {
-  font-size: 13px;
-  color: #333;
-  margin-bottom: 20px;
-}
-#offerList {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
-.offer-card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 10px;
-  cursor: pointer;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease;
-  display: flex;
-  align-items: center;
-}
-.offer-card:hover { transform: scale(1.02); }
-.offer-card img {
-  width: 30%;
-  height: 90px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-left: 10px;
-  flex-shrink: 0;
-}
-.offer-text {
-  width: 70%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.offer-title {
-  font-size: 14px;
-  font-weight: bold;
-  white-space: normal;
-  overflow: visible;
-}
-#loading { text-align: center; margin-top: 20px; font-size: 16px; }
-#noOffersMsg { color: red; white-space: normal; margin-top: 10px; }
-@media (max-width: 1000px) { #offerList { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 700px) { #offerList { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 400px) {
-  #offerList { grid-template-columns: 1fr; }
-  .offer-card { flex-direction: column; align-items: flex-start; }
-  .offer-card img { width: 100%; margin-left: 0; margin-bottom: 10px; }
-  .offer-text { width: 100%; }
-}
-</style>
-</head>
-<body>
-<main>
-  <div id="flagContainer">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
-  </div>
-
-  <div id="infoBox"></div>
-  <div id="reminderLine"></div>
-  <div id="offerList"></div>
-  <div id="noOffersMsg"></div>
-  <div id="loading">...</div>
-</main>
-
-<script>
-const infoBox = document.getElementById("infoBox");
-const reminderLine = document.getElementById("reminderLine");
-const offerList = document.getElementById("offerList");
-const noOffersMsg = document.getElementById("noOffersMsg");
-const loading = document.getElementById("loading");
-
-const arabicCountries = ["AE","SA","EG","IQ","JO","KW","LB","LY","MA","OM","QA","SD","SY","TN","YE","BH"];
-let isArabic = true;
-
-async function detectLanguage() {
-  try {
-    const res = await fetch("https://ipapi.co/json/");
-    const data = await res.json();
-    isArabic = arabicCountries.includes(data.country_code);
-    document.documentElement.lang = isArabic ? "ar" : "en";
-    document.body.style.direction = isArabic ? "rtl" : "ltr";
-    document.body.style.textAlign = isArabic ? "right" : "left";
-  } catch (err) { console.error(err); }
-}
-
-function translateOfferTitle(title) {
-  if (!title) return "";
-  return isArabic ? title + " (AR)" : title;
-}
-
-function createOfferCard(offer) {
-  const card = document.createElement("div");
-  card.className = "offer-card";
-
-  const img = document.createElement("img");
-  img.src = offer.picture || offer.thumbnail || "https://via.placeholder.com/150";
-  card.appendChild(img);
-
-  const textContainer = document.createElement("div");
-  textContainer.className = "offer-text";
-
-  const title = document.createElement("div");
-  title.className = "offer-title";
-  title.textContent = isArabic ? translateOfferTitle(offer.name_short || offer.name) : offer.name_short || offer.name;
-  textContainer.appendChild(title);
-
-  card.appendChild(textContainer);
-  card.onclick = () => {
-    if (offer.link) window.open(offer.link, "_blank");
-  };
-  return card;
-}
-
-async function fetchCPAGripOffers() {
-  try {
-    const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493";
-    const res = await fetch(url);
-    const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.offers || []);
-    return list.filter(o => parseFloat(o.payout) >= 0.5 && o.link);
-  } catch { return []; }
-}
-
-async function fetchOGAdsOffers() {
-  try {
-    const url = "https://www.ogads.com/api/offer_feed.json?user_id=YOUR_USER_ID"; // replace YOUR_USER_ID
-    const res = await fetch(url);
-    const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.offers || []);
-    return list.filter(o => parseFloat(o.payout) >= 0.5 && o.link);
-  } catch { return []; }
-}
-
-async function loadOffers() {
-  loading.style.display = "block";
-
-  // always set info/reminder texts
-  infoBox.textContent = isArabic
-    ? "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة."
-    : "Hello, my name is Youssef from Palestine. My dream is to become a successful developer and make my country proud. You can help me by signing up for the free sites below. Each sign-up takes only a minute, and the more you register, the closer I get to my dream. Please pray for my father's forgiveness.";
-
-  reminderLine.textContent = isArabic
-    ? "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار"
-    : "Even after completing all sign-ups, you can come back later as I will continuously add new sites.";
-
-  try {
-    const cpagripOffers = await fetchCPAGripOffers();
-    const ogadsOffers = await fetchOGAdsOffers();
-    const offers = [...cpagripOffers, ...ogadsOffers];
-
-    offerList.innerHTML = "";
-    noOffersMsg.textContent = "";
-
-    if (!offers.length) {
-      noOffersMsg.textContent = isArabic
-        ? "لا يوجد أي مواقع للترويج لها في بلدك حاليا، يمكنك الرجوع لاحقا"
-        : "There are no promotional sites available in your country currently, please check back later.";
-      return;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>يوسف</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f0f2f5;
+      color: #222;
+      direction: rtl;
+      text-align: right;
     }
 
-    offers.sort((a, b) => parseFloat(b.payout) - parseFloat(a.payout))
-          .forEach(o => offerList.appendChild(createOfferCard(o)));
+    main {
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
 
-  } finally {
-    loading.style.display = "none";
-  }
-}
+    #flagContainer {
+      text-align: center;
+      margin-bottom: 10px;
+    }
 
-detectLanguage().then(loadOffers);
-</script>
+    #flagContainer img {
+      width: 60px;
+      height: auto;
+      border-radius: 5px;
+    }
+
+    #infoBox {
+      background-color: #fff9e6;
+      border-right: 5px solid #ff9900;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    #reminderLine {
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    #noOffersLine {
+      font-size: 13px;
+      color: red;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    #offerList {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .offer-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease;
+      display: flex;
+      align-items: center;
+    }
+
+    .offer-card:hover {
+      transform: scale(1.02);
+    }
+
+    .offer-card img {
+      width: 30%;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-left: 10px;
+      flex-shrink: 0;
+    }
+
+    .offer-text {
+      width: 70%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .offer-title {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 4px;
+      white-space: normal;
+      overflow: visible;
+    }
+
+    .offer-desc {
+      font-size: 12px;
+      color: #555;
+      white-space: normal;
+      overflow: visible;
+    }
+
+    #loading {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+
+    @media (max-width: 1000px) {
+      #offerList { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 700px) {
+      #offerList { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 400px) {
+      #offerList { grid-template-columns: 1fr; }
+      .offer-card { flex-direction: column; align-items: flex-start; }
+      .offer-card img { width: 100%; margin-left: 0; margin-bottom: 10px; }
+      .offer-text { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="flagContainer">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
+    </div>
+
+    <div id="infoBox"></div>
+    <div id="reminderLine"></div>
+    <div id="noOffersLine"></div>
+
+    <div id="offerList"></div>
+    <div id="loading">...</div>
+  </main>
+
+  <script>
+    const offerList = document.getElementById("offerList");
+    const loading = document.getElementById("loading");
+    const infoBox = document.getElementById("infoBox");
+    const reminderLine = document.getElementById("reminderLine");
+    const noOffersLine = document.getElementById("noOffersLine");
+
+    const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
+    const cpaGripUrl = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
+
+    function createOfferCard(offer) {
+      const card = document.createElement("div");
+      card.className = "offer-card";
+
+      const img = document.createElement("img");
+      img.src = offer.picture || offer.image || "";
+      card.appendChild(img);
+
+      const textContainer = document.createElement("div");
+      textContainer.className = "offer-text";
+
+      const title = document.createElement("div");
+      title.className = "offer-title";
+      title.textContent = offer.name_short || offer.name || offer.title || "Untitled";
+      textContainer.appendChild(title);
+
+      const desc = document.createElement("div");
+      desc.className = "offer-desc";
+      desc.textContent = offer.adcopy || offer.description || offer.desc || "Complete this offer to earn rewards!";
+      textContainer.appendChild(desc);
+
+      card.appendChild(textContainer);
+
+      card.onclick = () => {
+        const url = offer.link || offer.offerlink || offer.offer_url || offer.preview_url;
+        if (url) window.open(url, "_blank");
+      };
+
+      return card;
+    }
+
+    async function fetchOGAdsOffers(ip, userAgent) {
+      const apiUrl = new URL("https://unlockcontent.net/api/v2");
+      apiUrl.searchParams.append("ip", ip);
+      apiUrl.searchParams.append("user_agent", userAgent);
+      apiUrl.searchParams.append("limit", "1000");
+      apiUrl.searchParams.append("ctype", "0");
+
+      const response = await fetch(apiUrl, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      const data = await response.json();
+      return data.offers || [];
+    }
+
+    async function fetchCPAGripOffers() {
+      const res = await fetch(cpaGripUrl);
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.offers || []);
+    }
+
+    async function fetchAllOffers() {
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        const userIp = ipData.ip;
+        const userAgent = navigator.userAgent;
+
+        // Detect language preference based on IP (simplified)
+        const langRes = await fetch(`https://ipapi.co/${userIp}/json/`);
+        const langData = await langRes.json();
+        const countryCode = (langData.country_code || "").toUpperCase();
+        const arabicCountries = ["SA","EG","DZ","MA","LY","YE","SD","IQ","SY","JO","LB","PS","KW","QA","BH","AE","OM","TN"];
+        const isArabic = arabicCountries.includes(countryCode);
+
+        // Set text blocks
+        if (isArabic) {
+          infoBox.textContent = "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله...";
+          reminderLine.textContent = "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار";
+        } else {
+          infoBox.textContent = "Hello, my name is Youssef from Palestine. My dream is to become a successful developer to make my country proud. I need a computer to achieve this, and you can help me by signing up for the free websites below...";
+          reminderLine.textContent = "Even after completing all registrations, you can come back later as I’ll keep adding new sites.";
+        }
+
+        // Fetch both networks
+        const [ogads, cpagrip] = await Promise.all([
+          fetchOGAdsOffers(userIp, userAgent),
+          fetchCPAGripOffers()
+        ]);
+
+        let offers = [...ogads, ...cpagrip];
+
+        // Filter payout >= 0.5
+        offers = offers.filter(o => parseFloat(o.payout || o.price || 0) >= 0.5);
+
+        // Sort by payout descending
+        offers.sort((a, b) => parseFloat(b.payout || b.price || 0) - parseFloat(a.payout || a.price || 0));
+
+        loading.style.display = "none";
+
+        if (!offers.length) {
+          noOffersLine.style.display = "block";
+          noOffersLine.textContent = isArabic
+            ? "لم أجد مواقع للترويج لها في دولتك، يمكنك العودة لاحقا"
+            : "Couldn't find websites to promote from your country, comeback later on";
+          return;
+        }
+
+        offers.forEach(o => {
+          const card = createOfferCard(o);
+          offerList.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error("Error fetching offers:", err);
+        loading.textContent = "Failed to load offers.";
+      }
+    }
+
+    fetchAllOffers();
+  </script>
 </body>
 </html>
