@@ -91,6 +91,7 @@
       overflow: visible;
     }
 
+    /* hide descriptions completely */
     .offer-desc {
       display: none;
     }
@@ -138,12 +139,12 @@
       <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
     </div>
 
-    <div id="infoBox" data-ar="السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة."
-                   data-en="Hello, my name is Youssef from Palestine. My dream is to become a successful developer and make my country proud. You can help me by signing up for the free sites below. Each sign-up takes only a minute, and the more you register, the closer I get to my dream. Please pray for my father's forgiveness.">
+    <div id="infoBox">
+      السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.
     </div>
 
-    <div id="reminderLine" data-ar="حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار"
-                         data-en="Even after completing all sign-ups, you can come back later as I will continuously add new sites.">
+    <div id="reminderLine">
+      حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار
     </div>
 
     <div id="offerList"></div>
@@ -153,32 +154,6 @@
   <script>
     const offerList = document.getElementById("offerList");
     const loading = document.getElementById("loading");
-    const infoBox = document.getElementById("infoBox");
-    const reminderLine = document.getElementById("reminderLine");
-
-    // Arabic countries list
-    const arabicCountries = [
-      "AE","SA","EG","IQ","JO","KW","LB","LY","MA","OM","QA","SD","SY","TN","YE","BH"
-    ];
-
-    async function detectAndTranslate() {
-      try {
-        const res = await fetch("https://ipapi.co/json/");
-        const data = await res.json();
-        const countryCode = data.country_code;
-        const isArabic = arabicCountries.includes(countryCode);
-        document.documentElement.lang = isArabic ? "ar" : "en";
-        document.body.style.direction = isArabic ? "rtl" : "ltr";
-        document.body.style.textAlign = isArabic ? "right" : "left";
-
-        infoBox.textContent = isArabic ? infoBox.dataset.ar : infoBox.dataset.en;
-        reminderLine.textContent = isArabic ? reminderLine.dataset.ar : reminderLine.dataset.en;
-      } catch(err) {
-        console.error("Geolocation error:", err);
-      }
-    }
-
-    detectAndTranslate();
 
     function createOfferCard(offer) {
       const card = document.createElement("div");
@@ -196,7 +171,7 @@
       title.textContent = offer.name_short || offer.name;
       textContainer.appendChild(title);
 
-      // description removed
+      // descriptions removed entirely
       const desc = document.createElement("div");
       desc.className = "offer-desc";
       textContainer.appendChild(desc);
@@ -262,7 +237,7 @@
         const [cpagripOffers, ogadsOffers] = await Promise.all([fetchCPAGripOffers(), fetchOgadsOffers()]);
         const allOffers = [...cpagripOffers, ...ogadsOffers];
         if (!allOffers.length) {
-          offerList.innerHTML = "<p>No offers available at the moment.</p>";
+          offerList.innerHTML = "<p>لا توجد عروض متاحة حالياً.</p>";
           return;
         }
         const sortedOffers = allOffers.sort((a, b) => parseFloat(b.payout) - parseFloat(a.payout));
