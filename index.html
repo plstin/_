@@ -154,18 +154,21 @@
       const card = document.createElement("div");
       card.className = "offer-card";
 
+      // Image (handle both OGAds + CPAGrip)
       const img = document.createElement("img");
-      img.src = offer.picture || offer.image || "";
+      img.src = offer.picture || offer.image || offer.thumbnail || "";
       card.appendChild(img);
 
       const textContainer = document.createElement("div");
       textContainer.className = "offer-text";
 
+      // Title (handle both OGAds + CPAGrip)
       const title = document.createElement("div");
       title.className = "offer-title";
-      title.textContent = offer.name_short || offer.name || offer.title || "Untitled";
+      title.textContent = offer.name_short || offer.name || offer.title || offer.offer_name || "Untitled";
       textContainer.appendChild(title);
 
+      // Description
       const desc = document.createElement("div");
       desc.className = "offer-desc";
       desc.textContent = offer.adcopy || offer.description || offer.desc || "Complete this offer to earn rewards!";
@@ -173,6 +176,7 @@
 
       card.appendChild(textContainer);
 
+      // Clickable link
       card.onclick = () => {
         const url = offer.link || offer.offerlink || offer.offer_url || offer.preview_url;
         if (url) window.open(url, "_blank");
@@ -243,8 +247,8 @@
         if (!offers.length) {
           noOffersLine.style.display = "block";
           noOffersLine.textContent = isArabic
-            ? "لم أجد مواقع للترويج لها في دولتك، يمكنك العودة لاحقا"
-            : "Couldn't find websites to promote from your country, comeback later on";
+            ? "لا يوجد أي مواقع للترويج لها في بلدك حاليا، يمكنك الرجوع لاحقا"
+            : "There are no websites to promote in your country right now, please check back later.";
           return;
         }
 
