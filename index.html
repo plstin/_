@@ -140,12 +140,8 @@
       <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
     </div>
 
-    <!-- ALWAYS VISIBLE INFO BOX -->
     <div id="infoBox"></div>
-
-    <!-- ALWAYS VISIBLE REMINDER LINE -->
     <div id="reminderLine"></div>
-
     <div id="offerList"></div>
     <div id="noOffersMsg"></div>
     <div id="loading">...</div>
@@ -169,14 +165,6 @@
         document.documentElement.lang = isArabic ? "ar" : "en";
         document.body.style.direction = isArabic ? "rtl" : "ltr";
         document.body.style.textAlign = isArabic ? "right" : "left";
-
-        infoBox.textContent = isArabic
-          ? "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة."
-          : "Hello, my name is Youssef from Palestine. My dream is to become a successful developer and make my country proud. You can help me by signing up for the free sites below. Each sign-up takes only a minute, and the more you register, the closer I get to my dream. Please pray for my father's forgiveness.";
-
-        reminderLine.textContent = isArabic
-          ? "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار"
-          : "Even after completing all sign-ups, you can come back later as I will continuously add new sites.";
       } catch (err) {
         console.error(err);
       }
@@ -184,8 +172,8 @@
 
     function translateOfferTitle(title) {
       if (!title) return "";
-      if (isArabic) return title + " (AR)"; // Replace with real Arabic translation if available
-      return title; // Non-Arabic: keep original title
+      if (isArabic) return title + " (AR)"; // replace with real Arabic translation if desired
+      return title;
     }
 
     function createOfferCard(offer) {
@@ -229,6 +217,15 @@
         const offers = await fetchCPAGripOffers();
         offerList.innerHTML = "";
         noOffersMsg.textContent = "";
+
+        // ALWAYS set info/reminder text
+        infoBox.textContent = isArabic
+          ? "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة."
+          : "Hello, my name is Youssef from Palestine. My dream is to become a successful developer and make my country proud. You can help me by signing up for the free sites below. Each sign-up takes only a minute, and the more you register, the closer I get to my dream. Please pray for my father's forgiveness.";
+
+        reminderLine.textContent = isArabic
+          ? "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار"
+          : "Even after completing all sign-ups, you can come back later as I will continuously add new sites.";
 
         if (!offers.length) {
           noOffersMsg.textContent = isArabic
