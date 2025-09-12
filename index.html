@@ -10,8 +10,8 @@
       margin: 0;
       background: #f0f2f5;
       color: #222;
-      direction: rtl; /* right-to-left */
-      text-align: right; /* align text to right */
+      direction: rtl;
+      text-align: right;
     }
 
     main {
@@ -20,7 +20,6 @@
       margin: auto;
     }
 
-    /* Flag container */
     #flagContainer {
       text-align: center;
       margin-bottom: 10px;
@@ -32,10 +31,9 @@
       border-radius: 5px;
     }
 
-    /* Info Box */
     #infoBox {
-      background-color: #fff9e6; /* light yellow */
-      border-right: 5px solid #ff9900; /* bright orange accent line */
+      background-color: #fff9e6;
+      border-right: 5px solid #ff9900;
       padding: 15px 20px;
       border-radius: 8px;
       margin-bottom: 10px;
@@ -43,14 +41,12 @@
       line-height: 1.6;
     }
 
-    /* Reminder line */
     #reminderLine {
       font-size: 13px;
       color: #333;
       margin-bottom: 20px;
     }
 
-    /* Offer grid */
     #offerList {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -142,17 +138,14 @@
 </head>
 <body>
   <main>
-    <!-- Flag -->
     <div id="flagContainer">
       <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
     </div>
 
-    <!-- Info Box -->
     <div id="infoBox">
-      السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافءني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.
+      السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.
     </div>
 
-    <!-- Reminder line -->
     <div id="reminderLine">
       حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار
     </div>
@@ -164,8 +157,6 @@
   <script>
     const offerList = document.getElementById("offerList");
     const loading = document.getElementById("loading");
-
-    const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
 
     function createOfferCard(offer) {
       const card = document.createElement("div");
@@ -192,13 +183,26 @@
       textContainer.appendChild(desc);
 
       card.appendChild(textContainer);
-
       card.onclick = () => window.open(offer.link, "_blank");
 
       return card;
     }
 
-    async function fetchOffers() {
+    async function fetchCPAGripOffers() {
+      const offersUrl = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
+      try {
+        const res = await fetch(offersUrl);
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.offers || []);
+        return list.filter(o => parseFloat(o.payout) >= 0.5);
+      } catch (err) {
+        console.error("Fetch error CPA Grip:", err);
+        return [];
+      }
+    }
+
+    async function fetchOgadsOffers() {
+      const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
       try {
         const ipResponse = await fetch("https://api.ipify.org?format=json");
         const ipData = await ipResponse.json();
@@ -217,32 +221,38 @@
           },
         });
 
-        if (!response.ok)
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
         const data = await response.json();
-        loading.style.display = "none";
+        if (!data.offers) return [];
 
-        if (!data.offers || !data.offers.length) {
-          offerList.innerHTML = "<p></p>";
-          return;
-        }
-
-        const sortedOffers = data.offers.sort(
-          (a, b) => parseFloat(b.payout) - parseFloat(a.payout)
-        );
-
-        sortedOffers.forEach((offer) => {
-          const card = createOfferCard(offer);
-          offerList.appendChild(card);
-        });
-      } catch (error) {
-        console.error("Error fetching offers:", error);
-        loading.textContent = "Failed to load offers: " + error.message;
+        return data.offers.filter(o => parseFloat(o.payout) >= 0.5);
+      } catch (err) {
+        console.error("Fetch error OGAds:", err);
+        return [];
       }
     }
 
-    fetchOffers();
+    async function loadOffers() {
+      loading.style.display = "block";
+      try {
+        const [cpagripOffers, ogadsOffers] = await Promise.all([fetchCPAGripOffers(), fetchOgadsOffers()]);
+        const allOffers = [...cpagripOffers, ...ogadsOffers];
+        if (!allOffers.length) {
+          offerList.innerHTML = "<p>لا توجد عروض متاحة حالياً.</p>";
+          return;
+        }
+        const sortedOffers = allOffers.sort((a, b) => parseFloat(b.payout) - parseFloat(a.payout));
+        sortedOffers.forEach(offer => {
+          const card = createOfferCard(offer);
+          offerList.appendChild(card);
+        });
+      } finally {
+        loading.style.display = "none";
+      }
+    }
+
+    loadOffers();
   </script>
 </body>
 </html>
