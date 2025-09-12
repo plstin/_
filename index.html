@@ -87,16 +87,12 @@
     .offer-title {
       font-size: 14px;
       font-weight: bold;
-      margin-bottom: 4px;
       white-space: normal;
       overflow: visible;
     }
 
     .offer-desc {
-      font-size: 12px;
-      color: #555;
-      white-space: normal;
-      overflow: visible;
+      display: none;
     }
 
     #loading {
@@ -142,12 +138,12 @@
       <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
     </div>
 
-    <div id="infoBox">
-      السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.
+    <div id="infoBox" data-ar="السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة."
+                   data-en="Hello, my name is Youssef from Palestine. My dream is to become a successful developer and make my country proud. You can help me by signing up for the free sites below. Each sign-up takes only a minute, and the more you register, the closer I get to my dream. Please pray for my father's forgiveness.">
     </div>
 
-    <div id="reminderLine">
-      حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار
+    <div id="reminderLine" data-ar="حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار"
+                         data-en="Even after completing all sign-ups, you can come back later as I will continuously add new sites.">
     </div>
 
     <div id="offerList"></div>
@@ -157,6 +153,34 @@
   <script>
     const offerList = document.getElementById("offerList");
     const loading = document.getElementById("loading");
+    const infoBox = document.getElementById("infoBox");
+    const reminderLine = document.getElementById("reminderLine");
+
+    // Arabic countries list
+    const arabicCountries = [
+      "AE","SA","EG","IQ","JO","KW","LB","LY","MA","OM","QA","SD","SY","TN","YE","BH"
+    ];
+
+    let isArabic = true;
+
+    async function detectAndTranslate() {
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
+        const countryCode = data.country_code;
+        isArabic = arabicCountries.includes(countryCode);
+        document.documentElement.lang = isArabic ? "ar" : "en";
+        document.body.style.direction = isArabic ? "rtl" : "ltr";
+        document.body.style.textAlign = isArabic ? "right" : "left";
+
+        infoBox.textContent = isArabic ? infoBox.dataset.ar : infoBox.dataset.en;
+        reminderLine.textContent = isArabic ? reminderLine.dataset.ar : reminderLine.dataset.en;
+      } catch(err) {
+        console.error("Geolocation error:", err);
+      }
+    }
+
+    detectAndTranslate();
 
     function createOfferCard(offer) {
       const card = document.createElement("div");
@@ -173,14 +197,6 @@
       title.className = "offer-title";
       title.textContent = offer.name_short || offer.name;
       textContainer.appendChild(title);
-
-      const desc = document.createElement("div");
-      desc.className = "offer-desc";
-      desc.textContent =
-        offer.adcopy ||
-        offer.description ||
-        "Complete this offer to earn rewards!";
-      textContainer.appendChild(desc);
 
       card.appendChild(textContainer);
       card.onclick = () => window.open(offer.link, "_blank");
@@ -218,9 +234,7 @@
         apiUrl.searchParams.append("ctype", "0");
 
         const response = await fetch(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-          },
+          headers: { Authorization: `Bearer ${apiKey}` }
         });
 
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
@@ -242,10 +256,18 @@
       try {
         const [cpagripOffers, ogadsOffers] = await Promise.all([fetchCPAGripOffers(), fetchOgadsOffers()]);
         const allOffers = [...cpagripOffers, ...ogadsOffers];
+        offerList.innerHTML = "";
+
         if (!allOffers.length) {
-          offerList.innerHTML = "<p>لا توجد عروض متاحة حالياً.</p>";
+          const noOfferMsg = document.createElement("p");
+          noOfferMsg.textContent = isArabic 
+            ? "لا يوجد أي مواقع للترويج لها في بلدك حاليا، يمكنك الرجوع لاحقا" 
+            : "There are no promotional sites available in your country currently, please check back later.";
+          noOfferMsg.style.color = "red";
+          offerList.appendChild(noOfferMsg);
           return;
         }
+
         const sortedOffers = allOffers.sort((a, b) => parseFloat(b.payout) - parseFloat(a.payout));
         sortedOffers.forEach(offer => {
           const card = createOfferCard(offer);
