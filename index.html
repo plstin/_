@@ -13,24 +13,20 @@
       direction: rtl;
       text-align: right;
     }
-
     main {
       padding: 20px;
       max-width: 1000px;
       margin: auto;
     }
-
     #flagContainer {
       text-align: center;
       margin-bottom: 10px;
     }
-
     #flagContainer img {
       width: 60px;
       height: auto;
       border-radius: 5px;
     }
-
     #infoBox {
       background-color: #fff9e6;
       border-right: 5px solid #ff9900;
@@ -40,19 +36,16 @@
       font-size: 14px;
       line-height: 1.6;
     }
-
     #reminderLine {
       font-size: 13px;
       color: #333;
       margin-bottom: 20px;
     }
-
     #offerList {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 14px;
     }
-
     .offer-card {
       background: #fff;
       border-radius: 10px;
@@ -63,11 +56,7 @@
       display: flex;
       align-items: center;
     }
-
-    .offer-card:hover {
-      transform: scale(1.02);
-    }
-
+    .offer-card:hover { transform: scale(1.02); }
     .offer-card img {
       width: 30%;
       height: 90px;
@@ -76,61 +65,27 @@
       margin-left: 10px;
       flex-shrink: 0;
     }
-
     .offer-text {
       width: 70%;
       display: flex;
       flex-direction: column;
       justify-content: center;
     }
-
     .offer-title {
       font-size: 14px;
       font-weight: bold;
       white-space: normal;
       overflow: visible;
     }
-
-    #loading {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 16px;
-    }
-
-    #noOffersMsg {
-      color: red;
-      white-space: normal;
-      margin-top: 10px;
-    }
-
-    @media (max-width: 1000px) {
-      #offerList {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    @media (max-width: 700px) {
-      #offerList {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
+    #loading { text-align: center; margin-top: 20px; font-size: 16px; }
+    #noOffersMsg { color: red; white-space: normal; margin-top: 10px; }
+    @media (max-width: 1000px) { #offerList { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px) { #offerList { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 400px) {
-      #offerList {
-        grid-template-columns: 1fr;
-      }
-      .offer-card {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .offer-card img {
-        width: 100%;
-        margin-left: 0;
-        margin-bottom: 10px;
-      }
-      .offer-text {
-        width: 100%;
-      }
+      #offerList { grid-template-columns: 1fr; }
+      .offer-card { flex-direction: column; align-items: flex-start; }
+      .offer-card img { width: 100%; margin-left: 0; margin-bottom: 10px; }
+      .offer-text { width: 100%; }
     }
   </style>
 </head>
@@ -165,15 +120,12 @@
         document.documentElement.lang = isArabic ? "ar" : "en";
         document.body.style.direction = isArabic ? "rtl" : "ltr";
         document.body.style.textAlign = isArabic ? "right" : "left";
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
     }
 
     function translateOfferTitle(title) {
       if (!title) return "";
-      if (isArabic) return title + " (AR)"; // replace with real Arabic translation if desired
-      return title;
+      return isArabic ? title + " (AR)" : title;
     }
 
     function createOfferCard(offer) {
@@ -204,21 +156,23 @@
         const res = await fetch(url);
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.offers || []);
-        return list.filter(o => parseFloat(o.payout) >= 0.5)
-                   .filter(o => (o.adcopy || o.description || "") !== "Enter your information now for a chance to win.");
-      } catch {
-        return [];
-      }
+        return list.filter(o => parseFloat(o.payout) >= 0.5);
+      } catch { return []; }
+    }
+
+    async function fetchOGAdsOffers() {
+      try {
+        const url = "https://www.ogads.com/api/offer_feed.json?user_id=YOUR_USER_ID"; // replace YOUR_USER_ID
+        const res = await fetch(url);
+        const data = await res.json();
+        return Array.isArray(data) ? data.filter(o => parseFloat(o.payout) >= 0.5) : [];
+      } catch { return []; }
     }
 
     async function loadOffers() {
       loading.style.display = "block";
       try {
-        const offers = await fetchCPAGripOffers();
-        offerList.innerHTML = "";
-        noOffersMsg.textContent = "";
-
-        // ALWAYS set info/reminder text
+        // always set info/reminder texts OUTSIDE if
         infoBox.textContent = isArabic
           ? "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة."
           : "Hello, my name is Youssef from Palestine. My dream is to become a successful developer and make my country proud. You can help me by signing up for the free sites below. Each sign-up takes only a minute, and the more you register, the closer I get to my dream. Please pray for my father's forgiveness.";
@@ -227,7 +181,22 @@
           ? "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار"
           : "Even after completing all sign-ups, you can come back later as I will continuously add new sites.";
 
+        const cpagripOffers = await fetchCPAGripOffers();
+        const ogadsOffers = await fetchOGAdsOffers();
+        const offers = [...cpagripOffers, ...ogadsOffers];
+        offerList.innerHTML = "";
+        noOffersMsg.textContent = "";
+
         if (!offers.length) {
+          // ALSO set info/reminder text INSIDE if
+          infoBox.textContent = isArabic
+            ? "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة."
+            : "Hello, my name is Youssef from Palestine. My dream is to become a successful developer and make my country proud. You can help me by signing up for the free sites below. Each sign-up takes only a minute, and the more you register, the closer I get to my dream. Please pray for my father's forgiveness.";
+
+          reminderLine.textContent = isArabic
+            ? "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار"
+            : "Even after completing all sign-ups, you can come back later as I will continuously add new sites.";
+
           noOffersMsg.textContent = isArabic
             ? "لا يوجد أي مواقع للترويج لها في بلدك حاليا، يمكنك الرجوع لاحقا"
             : "There are no promotional sites available in your country currently, please check back later.";
@@ -236,6 +205,7 @@
 
         offers.sort((a, b) => parseFloat(b.payout) - parseFloat(a.payout))
               .forEach(o => offerList.appendChild(createOfferCard(o)));
+
       } finally {
         loading.style.display = "none";
       }
