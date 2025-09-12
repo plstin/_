@@ -91,10 +91,6 @@
       overflow: visible;
     }
 
-    .offer-desc {
-      display: none;
-    }
-
     #loading {
       text-align: center;
       margin-top: 20px;
@@ -144,13 +140,11 @@
       <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
     </div>
 
-    <div id="infoBox" data-ar="السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة."
-                   data-en="Hello, my name is Youssef from Palestine. My dream is to become a successful developer and make my country proud. You can help me by signing up for the free sites below. Each sign-up takes only a minute, and the more you register, the closer I get to my dream. Please pray for my father's forgiveness.">
-    </div>
+    <!-- ALWAYS VISIBLE INFO BOX -->
+    <div id="infoBox"></div>
 
-    <div id="reminderLine" data-ar="حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار"
-                         data-en="Even after completing all sign-ups, you can come back later as I will continuously add new sites.">
-    </div>
+    <!-- ALWAYS VISIBLE REMINDER LINE -->
+    <div id="reminderLine"></div>
 
     <div id="offerList"></div>
     <div id="noOffersMsg"></div>
@@ -158,38 +152,40 @@
   </main>
 
   <script>
-    const offerList = document.getElementById("offerList");
-    const loading = document.getElementById("loading");
     const infoBox = document.getElementById("infoBox");
     const reminderLine = document.getElementById("reminderLine");
+    const offerList = document.getElementById("offerList");
     const noOffersMsg = document.getElementById("noOffersMsg");
+    const loading = document.getElementById("loading");
 
     const arabicCountries = ["AE","SA","EG","IQ","JO","KW","LB","LY","MA","OM","QA","SD","SY","TN","YE","BH"];
     let isArabic = true;
 
-    async function detectAndTranslate() {
+    async function detectLanguage() {
       try {
         const res = await fetch("https://ipapi.co/json/");
         const data = await res.json();
-        const countryCode = data.country_code;
-        isArabic = arabicCountries.includes(countryCode);
+        isArabic = arabicCountries.includes(data.country_code);
         document.documentElement.lang = isArabic ? "ar" : "en";
         document.body.style.direction = isArabic ? "rtl" : "ltr";
         document.body.style.textAlign = isArabic ? "right" : "left";
 
-        infoBox.textContent = isArabic ? infoBox.dataset.ar : infoBox.dataset.en;
-        reminderLine.textContent = isArabic ? reminderLine.dataset.ar : reminderLine.dataset.en;
-      } catch(err) {
-        console.error("Geolocation error:", err);
+        infoBox.textContent = isArabic
+          ? "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة."
+          : "Hello, my name is Youssef from Palestine. My dream is to become a successful developer and make my country proud. You can help me by signing up for the free sites below. Each sign-up takes only a minute, and the more you register, the closer I get to my dream. Please pray for my father's forgiveness.";
+
+        reminderLine.textContent = isArabic
+          ? "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار"
+          : "Even after completing all sign-ups, you can come back later as I will continuously add new sites.";
+      } catch (err) {
+        console.error(err);
       }
     }
 
-    detectAndTranslate();
-
     function translateOfferTitle(title) {
       if (!title) return "";
-      if (isArabic) return title + " (AR)"; // Placeholder: integrate real translation if desired
-      return title;
+      if (isArabic) return title + " (AR)"; // Replace with real Arabic translation if available
+      return title; // Non-Arabic: keep original title
     }
 
     function createOfferCard(offer) {
@@ -205,7 +201,7 @@
 
       const title = document.createElement("div");
       title.className = "offer-title";
-      title.textContent = translateOfferTitle(offer.name_short || offer.name);
+      title.textContent = isArabic ? translateOfferTitle(offer.name_short || offer.name) : offer.name_short || offer.name;
       textContainer.appendChild(title);
 
       card.appendChild(textContainer);
@@ -215,48 +211,14 @@
     }
 
     async function fetchCPAGripOffers() {
-      const offersUrl = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
       try {
-        const res = await fetch(offersUrl);
+        const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493";
+        const res = await fetch(url);
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.offers || []);
-        return list
-          .filter(o => parseFloat(o.payout) >= 0.5)
-          .filter(o => (o.adcopy || o.description || "") !== "Enter your information now for a chance to win.");
-      } catch (err) {
-        console.error("Fetch error CPA Grip:", err);
-        return [];
-      }
-    }
-
-    async function fetchOgadsOffers() {
-      const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
-      try {
-        const ipResponse = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipResponse.json();
-        const userIp = ipData.ip;
-        const userAgent = navigator.userAgent;
-
-        const apiUrl = new URL("https://unlockcontent.net/api/v2");
-        apiUrl.searchParams.append("ip", userIp);
-        apiUrl.searchParams.append("user_agent", userAgent);
-        apiUrl.searchParams.append("limit", "1000");
-        apiUrl.searchParams.append("ctype", "0");
-
-        const response = await fetch(apiUrl, {
-          headers: { Authorization: `Bearer ${apiKey}` }
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
-        const data = await response.json();
-        if (!data.offers) return [];
-
-        return data.offers
-          .filter(o => parseFloat(o.payout) >= 0.5)
-          .filter(o => (o.adcopy || o.description || "") !== "Enter your information now for a chance to win.");
-      } catch (err) {
-        console.error("Fetch error OGAds:", err);
+        return list.filter(o => parseFloat(o.payout) >= 0.5)
+                   .filter(o => (o.adcopy || o.description || "") !== "Enter your information now for a chance to win.");
+      } catch {
         return [];
       }
     }
@@ -264,29 +226,25 @@
     async function loadOffers() {
       loading.style.display = "block";
       try {
-        const [cpagripOffers, ogadsOffers] = await Promise.all([fetchCPAGripOffers(), fetchOgadsOffers()]);
-        const allOffers = [...cpagripOffers, ...ogadsOffers];
+        const offers = await fetchCPAGripOffers();
         offerList.innerHTML = "";
         noOffersMsg.textContent = "";
 
-        if (!allOffers.length) {
-          noOffersMsg.textContent = isArabic 
-            ? "لا يوجد أي مواقع للترويج لها في بلدك حاليا، يمكنك الرجوع لاحقا" 
+        if (!offers.length) {
+          noOffersMsg.textContent = isArabic
+            ? "لا يوجد أي مواقع للترويج لها في بلدك حاليا، يمكنك الرجوع لاحقا"
             : "There are no promotional sites available in your country currently, please check back later.";
           return;
         }
 
-        const sortedOffers = allOffers.sort((a, b) => parseFloat(b.payout) - parseFloat(a.payout));
-        sortedOffers.forEach(offer => {
-          const card = createOfferCard(offer);
-          offerList.appendChild(card);
-        });
+        offers.sort((a, b) => parseFloat(b.payout) - parseFloat(a.payout))
+              .forEach(o => offerList.appendChild(createOfferCard(o)));
       } finally {
         loading.style.display = "none";
       }
     }
 
-    loadOffers();
+    detectLanguage().then(loadOffers);
   </script>
 </body>
 </html>
