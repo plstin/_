@@ -101,6 +101,12 @@
       font-size: 16px;
     }
 
+    #noOffersMsg {
+      color: red;
+      white-space: normal;
+      margin-top: 10px;
+    }
+
     @media (max-width: 1000px) {
       #offerList {
         grid-template-columns: repeat(3, 1fr);
@@ -147,6 +153,7 @@
     </div>
 
     <div id="offerList"></div>
+    <div id="noOffersMsg"></div>
     <div id="loading">...</div>
   </main>
 
@@ -155,12 +162,9 @@
     const loading = document.getElementById("loading");
     const infoBox = document.getElementById("infoBox");
     const reminderLine = document.getElementById("reminderLine");
+    const noOffersMsg = document.getElementById("noOffersMsg");
 
-    // Arabic countries list
-    const arabicCountries = [
-      "AE","SA","EG","IQ","JO","KW","LB","LY","MA","OM","QA","SD","SY","TN","YE","BH"
-    ];
-
+    const arabicCountries = ["AE","SA","EG","IQ","JO","KW","LB","LY","MA","OM","QA","SD","SY","TN","YE","BH"];
     let isArabic = true;
 
     async function detectAndTranslate() {
@@ -182,6 +186,12 @@
 
     detectAndTranslate();
 
+    function translateOfferTitle(title) {
+      if (!title) return "";
+      if (isArabic) return title + " (AR)"; // Placeholder: integrate real translation if desired
+      return title;
+    }
+
     function createOfferCard(offer) {
       const card = document.createElement("div");
       card.className = "offer-card";
@@ -195,7 +205,7 @@
 
       const title = document.createElement("div");
       title.className = "offer-title";
-      title.textContent = offer.name_short || offer.name;
+      title.textContent = translateOfferTitle(offer.name_short || offer.name);
       textContainer.appendChild(title);
 
       card.appendChild(textContainer);
@@ -257,14 +267,12 @@
         const [cpagripOffers, ogadsOffers] = await Promise.all([fetchCPAGripOffers(), fetchOgadsOffers()]);
         const allOffers = [...cpagripOffers, ...ogadsOffers];
         offerList.innerHTML = "";
+        noOffersMsg.textContent = "";
 
         if (!allOffers.length) {
-          const noOfferMsg = document.createElement("p");
-          noOfferMsg.textContent = isArabic 
+          noOffersMsg.textContent = isArabic 
             ? "لا يوجد أي مواقع للترويج لها في بلدك حاليا، يمكنك الرجوع لاحقا" 
             : "There are no promotional sites available in your country currently, please check back later.";
-          noOfferMsg.style.color = "red";
-          offerList.appendChild(noOfferMsg);
           return;
         }
 
