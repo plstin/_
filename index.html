@@ -111,11 +111,15 @@
 </head>
 <body>
   <main>
+    <!-- Flag -->
     <div id="flagContainer">
-      <img id="flag" src="" alt="flag">
+      <img id="flag" src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
     </div>
 
+    <!-- InfoBox -->
     <div id="infoBox"></div>
+
+    <!-- Reminder Line -->
     <div id="reminderLine"></div>
 
     <!-- CPA Grip -->
@@ -126,20 +130,21 @@
   </main>
 
   <script>
-    // Detect language (Arabic vs English)
+    // Language detection (Arabic vs English)
     const isArabic = navigator.language.startsWith("ar");
+
     const texts = {
-      info_ar: "مرحبًا! هذه العروض متاحة لك. اختر العرض الذي يناسبك للحصول على المكافآت.",
-      info_en: "Hello! These offers are available for you. Pick the one that suits you to earn rewards.",
-      reminder_ar: "💡 تذكير: بعض العروض قد تكون مخصصة حسب موقعك.",
-      reminder_en: "💡 Reminder: Some offers may be geo-targeted.",
+      info_ar: "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.",
+      info_en: "Hello, my name is Yousef from Palestine. My dream is to become a successful developer and make my country proud. To achieve this, I need a computer. You can support me by registering for free on the websites below. Each registration helps me get closer to my dream. I also kindly ask you to pray for my parents.",
+      reminder_ar: "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار",
+      reminder_en: "Even after you finish all registrations, you can come back later because I will keep adding new sites.",
       noOffers_ar: "❌ لا توجد عروض متاحة حالياً",
       noOffers_en: "❌ No offers available at the moment"
     };
 
+    // Set text content
     document.getElementById("infoBox").innerText = isArabic ? texts.info_ar : texts.info_en;
     document.getElementById("reminderLine").innerText = isArabic ? texts.reminder_ar : texts.reminder_en;
-    document.getElementById("flag").src = isArabic ? "https://flagcdn.com/sa.svg" : "https://flagcdn.com/us.svg";
 
     // ============= CPA Grip =============
     (function() {
@@ -239,6 +244,7 @@
   </script>
 </body>
 </html>
+
 
 
 
