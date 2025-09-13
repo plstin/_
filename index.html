@@ -12,19 +12,16 @@
       color: #222;
       padding: 20px;
     }
-
     h2 {
       margin: 20px 0 10px;
       color: #1446FF;
     }
-
     .offer-list {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 16px;
       margin-bottom: 40px;
     }
-
     .offer-card {
       background: #fff;
       border-radius: 10px;
@@ -36,24 +33,20 @@
       flex-direction: column;
       gap: 6px;
     }
-
     .offer-card:hover {
       transform: scale(1.03);
     }
-
     .offer-card img {
       width: 100%;
       height: 140px;
       object-fit: cover;
       border-radius: 8px;
     }
-
     .offer-title {
       font-size: 15px;
       font-weight: bold;
       color: #000;
     }
-
     .offer-desc {
       font-size: 13px;
       color: #555;
@@ -82,10 +75,10 @@
           card.className = "offer-card";
           card.innerHTML = `
             <img src="${o.offerimage || ''}" alt="Offer">
-            <div class="offer-title">${o.title || 'No title'}</div>
-            <div class="offer-desc">${o.adcopy || o.description || ''}</div>
+            <div class="offer-title">${o.offername || 'No title'}</div>
+            <div class="offer-desc">${o.offerdesc || ''}</div>
           `;
-          card.onclick = () => window.open(o.offerlink || o.offer_url || o.preview_url, "_blank");
+          card.onclick = () => window.open(o.offerlink || "#", "_blank");
           cpaGripList.appendChild(card);
         });
       })
@@ -96,7 +89,8 @@
 
     // =============== OGADS FETCH ===============
     const ogAdsList = document.getElementById("ogAdsList");
-    const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
+    const apiKey =
+      "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
 
     async function fetchOgads() {
       try {
@@ -114,19 +108,18 @@
         const response = await fetch(apiUrl, {
           headers: { Authorization: `Bearer ${apiKey}` },
         });
-
         if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-        const data = await response.json();
 
+        const data = await response.json();
         (data.offers || []).forEach((o) => {
           const card = document.createElement("div");
           card.className = "offer-card";
           card.innerHTML = `
-            <img src="${o.picture || ''}" alt="Offer">
+            <img src="${o.picture || o.icon_url || ''}" alt="Offer">
             <div class="offer-title">${o.name_short || o.name || 'No title'}</div>
             <div class="offer-desc">${o.adcopy || o.description || ''}</div>
           `;
-          card.onclick = () => window.open(o.link, "_blank");
+          card.onclick = () => window.open(o.link || o.click_url || "#", "_blank");
           ogAdsList.appendChild(card);
         });
       } catch (err) {
