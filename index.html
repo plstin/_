@@ -148,7 +148,7 @@
     // ================= Country detection =================
     async function detectCountryAndSetText() {
       try {
-        const res = await fetch("https://ipapi.co/json/");
+        const res = await fetch("https://ipwho.is/");
         const data = await res.json();
         const countryCode = data.country_code;
         isArabic = arabicCountries.includes(countryCode);
@@ -261,8 +261,6 @@
   </script>
 </body>
 </html>
-
-
 
 
 
