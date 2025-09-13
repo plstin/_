@@ -101,7 +101,6 @@
       font-size: 16px;
     }
 
-    /* 🔴 Style for "no offers" message */
     .no-offers {
       color: red;
       font-weight: bold;
@@ -161,7 +160,7 @@
     const offerList = document.getElementById("offerList");
     const loading = document.getElementById("loading");
 
-    let isArabicUser = true; // 🔑 flag to know user language
+    let isArabicUser = true; 
 
     function createOfferCard(offer) {
       const card = document.createElement("div");
@@ -244,7 +243,6 @@
         const [cpagripOffers, ogadsOffers] = await Promise.all([fetchCPAGripOffers(), fetchOgadsOffers()]);
         const allOffers = [...cpagripOffers, ...ogadsOffers];
         if (!allOffers.length) {
-          // 🔴 Show message in correct language & red
           if (isArabicUser) {
             offerList.innerHTML = "<p class='no-offers'>لا توجد عروض متاحة حالياً.</p>";
           } else {
@@ -262,7 +260,6 @@
       }
     }
 
-    // Language switcher based on country
     async function adjustForLanguage() {
       try {
         const res = await fetch("https://ipapi.co/json/");
@@ -274,7 +271,7 @@
         ];
 
         if (!arabicCountries.includes(countryCode)) {
-          isArabicUser = false; // 🔑 mark as non-arabic
+          isArabicUser = false; 
           const infoBox = document.getElementById("infoBox");
           const reminder = document.getElementById("reminderLine");
 
