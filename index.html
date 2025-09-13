@@ -1,72 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>Offers</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>يوسف - Yousef</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f2f5;
       margin: 0;
-      padding: 20px;
+      background: #f0f2f5;
+      color: #222;
+      direction: rtl;
+      text-align: right;
     }
-    h2 {
-      margin-top: 30px;
+    main {
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    #flagContainer {
+      text-align: center;
       margin-bottom: 10px;
-      font-size: 20px;
+    }
+    #flagContainer img {
+      width: 60px;
+      height: auto;
+      border-radius: 5px;
+    }
+    #infoBox {
+      background-color: #fff9e6;
+      border-right: 5px solid #ff9900;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    #reminderLine {
+      font-size: 13px;
       color: #333;
+      margin-bottom: 20px;
     }
     .offer-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 14px;
       margin-bottom: 40px;
     }
     .offer-card {
       background: #fff;
       border-radius: 10px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      padding: 10px;
       cursor: pointer;
-      overflow: hidden;
-      transition: transform .18s ease;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease;
       display: flex;
-      flex-direction: column;
+      align-items: center;
     }
     .offer-card:hover {
-      transform: scale(1.03);
+      transform: scale(1.02);
     }
     .offer-card img {
-      width: 100%;
-      height: 120px;
+      width: 30%;
+      height: 90px;
       object-fit: cover;
-      background: #eee;
+      border-radius: 8px;
+      margin-left: 10px;
+      flex-shrink: 0;
+    }
+    .offer-text {
+      width: 70%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
     .offer-title {
       font-size: 14px;
-      font-weight: 700;
-      margin: 10px;
+      font-weight: bold;
+      white-space: normal;
+      overflow: visible;
     }
     .offer-desc {
-      font-size: 13px;
-      color: #555;
-      margin: 0 10px 10px;
+      display: none;
     }
     .no-offers {
       color: red;
       text-align: center;
       font-weight: 700;
       padding: 16px;
+      grid-column: 1 / -1;
+    }
+    #loading {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    @media (max-width: 1000px) {
+      .offer-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 700px) {
+      .offer-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 400px) {
+      .offer-grid { grid-template-columns: 1fr; }
+      .offer-card { flex-direction: column; align-items: flex-start; }
+      .offer-card img { width: 100%; margin-left: 0; margin-bottom: 10px; }
+      .offer-text { width: 100%; }
     }
   </style>
 </head>
 <body>
-  <h2>CPA Grip Grid</h2>
-  <div id="cpagrip-grid" class="offer-grid"></div>
+  <main>
+    <div id="flagContainer">
+      <img id="flag" src="" alt="flag">
+    </div>
 
-  <h2>OGAds Grid</h2>
-  <div id="ogads-grid" class="offer-grid"></div>
+    <div id="infoBox"></div>
+    <div id="reminderLine"></div>
+
+    <!-- CPA Grip -->
+    <div id="cpagrip-grid" class="offer-grid"></div>
+
+    <!-- OGAds -->
+    <div id="ogads-grid" class="offer-grid"></div>
+  </main>
 
   <script>
+    // Detect language (Arabic vs English)
+    const isArabic = navigator.language.startsWith("ar");
+    const texts = {
+      info_ar: "مرحبًا! هذه العروض متاحة لك. اختر العرض الذي يناسبك للحصول على المكافآت.",
+      info_en: "Hello! These offers are available for you. Pick the one that suits you to earn rewards.",
+      reminder_ar: "💡 تذكير: بعض العروض قد تكون مخصصة حسب موقعك.",
+      reminder_en: "💡 Reminder: Some offers may be geo-targeted.",
+      noOffers_ar: "❌ لا توجد عروض متاحة حالياً",
+      noOffers_en: "❌ No offers available at the moment"
+    };
+
+    document.getElementById("infoBox").innerText = isArabic ? texts.info_ar : texts.info_en;
+    document.getElementById("reminderLine").innerText = isArabic ? texts.reminder_ar : texts.reminder_en;
+    document.getElementById("flag").src = isArabic ? "https://flagcdn.com/sa.svg" : "https://flagcdn.com/us.svg";
+
     // ============= CPA Grip =============
     (function() {
       const grid = document.getElementById("cpagrip-grid");
@@ -75,28 +149,34 @@
       fetch(url)
         .then(res => res.json())
         .then(data => {
-          const offers = data.offers || data; // sometimes wrapped in "offers"
+          const offers = data.offers || data;
           if (!offers || !offers.length) {
-            grid.innerHTML = '<div class="no-offers">No CPA Grip offers available</div>';
+            grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
             return;
           }
-          offers.forEach(o => {
-            const card = document.createElement("div");
-            card.className = "offer-card";
-            card.innerHTML = `
-              <img src="${o.offerphoto || ''}" alt="Offer">
-              <div class="offer-title">${o.title || 'No title'}</div>
-              <div class="offer-desc">${o.description || ''}</div>
-            `;
-            card.onclick = () => {
-              if (o.offerlink) window.open(o.offerlink, "_blank");
-            };
-            grid.appendChild(card);
-          });
+          offers
+            .filter(o => parseFloat(o.payout) >= 0.5)
+            .forEach(o => {
+              const card = document.createElement("div");
+              card.className = "offer-card";
+              card.innerHTML = `
+                <img src="${o.offerphoto || ''}" alt="Offer">
+                <div class="offer-text">
+                  <div class="offer-title">${o.title || 'No title'}</div>
+                </div>
+              `;
+              card.onclick = () => {
+                if (o.offerlink) window.open(o.offerlink, "_blank");
+              };
+              grid.appendChild(card);
+            });
+          if (!grid.children.length) {
+            grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
+          }
         })
         .catch(err => {
           console.error("CPA Grip error:", err);
-          grid.innerHTML = '<div class="no-offers">Failed to load CPA Grip offers</div>';
+          grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
         });
     })();
 
@@ -122,30 +202,35 @@
           const data = await res.json();
           const offers = data.offers || [];
           if (!offers.length) {
-            grid.innerHTML = '<div class="no-offers">No OGAds offers available</div>';
+            grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
             return;
           }
-          offers.forEach(o => {
-            const card = document.createElement("div");
-            card.className = "offer-card";
-            const img = o.icon_url || o.picture || "";
-            const title = o.name || o.name_short || "No title";
-            const desc = o.adcopy || o.description || "";
-            const url = o.click_url || o.link || o.offer_url || o.url;
+          offers
+            .filter(o => parseFloat(o.payout) >= 0.5)
+            .forEach(o => {
+              const card = document.createElement("div");
+              card.className = "offer-card";
+              const img = o.icon_url || o.picture || "";
+              const title = o.name || o.name_short || "No title";
+              const url = o.click_url || o.link || o.offer_url || o.url;
 
-            card.innerHTML = `
-              <img src="${img}" alt="Offer">
-              <div class="offer-title">${title}</div>
-              <div class="offer-desc">${desc}</div>
-            `;
-            card.onclick = () => {
-              if (url) window.open(url, "_blank");
-            };
-            grid.appendChild(card);
-          });
+              card.innerHTML = `
+                <img src="${img}" alt="Offer">
+                <div class="offer-text">
+                  <div class="offer-title">${title}</div>
+                </div>
+              `;
+              card.onclick = () => {
+                if (url) window.open(url, "_blank");
+              };
+              grid.appendChild(card);
+            });
+          if (!grid.children.length) {
+            grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
+          }
         } catch (err) {
           console.error("OGAds error:", err);
-          grid.innerHTML = '<div class="no-offers">Failed to load OGAds offers</div>';
+          grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
         }
       }
 
