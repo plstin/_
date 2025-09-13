@@ -112,9 +112,9 @@
     // ================= Texts =================
     const texts = {
       info_ar: "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.",
-      info_en: "Hello, my name is Yousef from Palestine. My dream is to become a successful developer to make my country proud. To achieve this, I need a computer. You can support me by signing up for free on the websites below. The more sign ups you do, the closer i get to my dream. I also kindly ask you to pray for my parents.",
+      info_en: "Hello, my name is Yousef from Palestine. My dream is to become a successful developer and make my country proud. To achieve this, I need a computer. You can support me by registering for free on the websites below. Each registration helps me get closer to my dream. I also kindly ask you to pray for my parents.",
       reminder_ar: "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار",
-      reminder_en: "Even after you finish all sign ups or no websites appear below, you can come back later because I will keep adding new sites."
+      reminder_en: "Even after you finish all registrations, you can come back later because I will keep adding new sites."
     };
 
     // ================= Arabic-speaking countries =================
@@ -153,6 +153,12 @@
 
     // ================= Offer Handling =================
     const container = document.getElementById("offers-container");
+
+    // Helper: Clean OGAds title
+    function cleanOgadsTitle(title) {
+      const regex = /\b([A-Z]{2})\b[\s-].*$/;
+      return title.replace(regex, "").trim();
+    }
 
     // ============= CPA Grip =============
     (function() {
@@ -205,7 +211,8 @@
               const card = document.createElement("div");
               card.className = "offer-card";
               const img = o.icon_url || o.picture || "";
-              const title = o.name || o.name_short || "No title"; // clean offer name only
+              const rawTitle = o.name || o.name_short || "No title";
+              const title = cleanOgadsTitle(rawTitle) || "No title";
               const url = o.click_url || o.link || o.offer_url || o.url;
 
               card.innerHTML = `
@@ -228,6 +235,7 @@
   </script>
 </body>
 </html>
+
 
 
 
