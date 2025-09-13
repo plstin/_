@@ -138,48 +138,28 @@
       <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
     </div>
 
-    <div id="infoBox"></div>
-    <div id="reminderLine"></div>
+    <div id="infoBox">
+      السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.
+    </div>
+
+    <div id="reminderLine">
+      حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار
+    </div>
 
     <div id="offerList"></div>
     <div id="loading">...</div>
   </main>
 
   <script>
-    // --- Language detection & text setup ---
-    const userLang = navigator.language || navigator.userLanguage;
-    const isArabic = userLang.startsWith("ar");
-
-    const translations = {
-      ar: {
-        info: "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.",
-        reminder: "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار",
-        noOffers: "لا توجد عروض متاحة حالياً."
-      },
-      en: {
-        info: "Hello, my name is Yousef from Palestine. My dream is to become a successful developer and make my country proud. For this, I need a computer. You can help me by registering for free on the websites below — they reward me for promoting them. Each registration takes less than a minute. The more sites you join, the closer I get to achieving my dream. Please also pray for my father’s forgiveness.",
-        reminder: "Even after completing all registrations, you can come back later as I will keep adding new sites.",
-        noOffers: "No offers available right now."
-      }
-    };
-
-    document.documentElement.lang = isArabic ? "ar" : "en";
-    document.body.style.direction = isArabic ? "rtl" : "ltr";
-    document.body.style.textAlign = isArabic ? "right" : "left";
-
-    document.getElementById("infoBox").textContent = isArabic ? translations.ar.info : translations.en.info;
-    document.getElementById("reminderLine").textContent = isArabic ? translations.ar.reminder : translations.en.reminder;
-
-    // --- Offer card creation ---
     const offerList = document.getElementById("offerList");
     const loading = document.getElementById("loading");
 
-    function createOfferCard(offer) {
+    function createOfferCard(normalized) {
       const card = document.createElement("div");
       card.className = "offer-card";
 
       const img = document.createElement("img");
-      img.src = offer.picture || "";
+      img.src = normalized.image || "";
       card.appendChild(img);
 
       const textContainer = document.createElement("div");
@@ -187,83 +167,87 @@
 
       const title = document.createElement("div");
       title.className = "offer-title";
-      title.textContent = offer.name_short || offer.name;
+      title.textContent = normalized.title;
       textContainer.appendChild(title);
 
+      const desc = document.createElement("div");
+      desc.className = "offer-desc";
+      desc.textContent = normalized.description || "";
+      textContainer.appendChild(desc);
+
       card.appendChild(textContainer);
-      card.onclick = () => window.open(offer.link, "_blank");
+      card.onclick = () => window.open(normalized.url, "_blank");
 
       return card;
     }
 
-    // --- Fetch CPA Grip offers ---
+    // --- CPA Grip fetch & normalize ---
     async function fetchCPAGripOffers() {
-      const offersUrl = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
+      const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
       try {
-        const res = await fetch(offersUrl);
+        const res = await fetch(url);
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.offers || []);
         return list
           .filter(o => parseFloat(o.payout) >= 0.5)
-          .filter(o => (o.adcopy || o.description || "") !== "Enter your information now for a chance to win.");
+          .map(o => ({
+            title: o.name_short,
+            description: o.adcopy || o.description,
+            image: o.picture,
+            url: o.link
+          }));
       } catch (err) {
-        console.error("Fetch error CPA Grip:", err);
+        console.error("CPA Grip error:", err);
         return [];
       }
     }
 
-    // --- Fetch OGAds offers ---
+    // --- OGAds fetch & normalize ---
     async function fetchOgadsOffers() {
       const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
       try {
-        const ipResponse = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipResponse.json();
-        const userIp = ipData.ip;
-        const userAgent = navigator.userAgent;
-
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
         const apiUrl = new URL("https://unlockcontent.net/api/v2");
-        apiUrl.searchParams.append("ip", userIp);
-        apiUrl.searchParams.append("user_agent", userAgent);
+        apiUrl.searchParams.append("ip", ipData.ip);
+        apiUrl.searchParams.append("user_agent", navigator.userAgent);
         apiUrl.searchParams.append("limit", "1000");
         apiUrl.searchParams.append("ctype", "0");
 
-        const response = await fetch(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-          },
+        const res = await fetch(apiUrl, {
+          headers: { Authorization: `Bearer ${apiKey}` }
         });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
 
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
-        const data = await response.json();
-        if (!data.offers) return [];
-
-        return data.offers
+        return (data.offers || [])
           .filter(o => parseFloat(o.payout) >= 0.5)
-          .filter(o => (o.adcopy || o.description || "") !== "Enter your information now for a chance to win.");
+          .map(o => ({
+            title: o.name,
+            description: o.adcopy || o.description,
+            image: o.icon_url,
+            url: o.click_url
+          }));
       } catch (err) {
-        console.error("Fetch error OGAds:", err);
+        console.error("OGAds error:", err);
         return [];
       }
     }
 
-    // --- Load all offers ---
+    // --- Load both sequentially into the same list ---
     async function loadOffers() {
       loading.style.display = "block";
-      try {
-        const [cpagripOffers, ogadsOffers] = await Promise.all([fetchCPAGripOffers(), fetchOgadsOffers()]);
-        const allOffers = [...cpagripOffers, ...ogadsOffers];
-        if (!allOffers.length) {
-          offerList.innerHTML = `<p>${isArabic ? translations.ar.noOffers : translations.en.noOffers}</p>`;
-          return;
-        }
-        const sortedOffers = allOffers.sort((a, b) => parseFloat(b.payout) - parseFloat(a.payout));
-        sortedOffers.forEach(offer => {
-          const card = createOfferCard(offer);
-          offerList.appendChild(card);
-        });
-      } finally {
-        loading.style.display = "none";
+      offerList.innerHTML = "";
+
+      const cpagrip = await fetchCPAGripOffers();
+      cpagrip.forEach(o => offerList.appendChild(createOfferCard(o)));
+
+      const ogads = await fetchOgadsOffers();
+      ogads.forEach(o => offerList.appendChild(createOfferCard(o)));
+
+      loading.style.display = "none";
+      if (!cpagrip.length && !ogads.length) {
+        offerList.innerHTML = `<div class="no-offers">لا توجد عروض متاحة حاليا</div>`;
       }
     }
 
