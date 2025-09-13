@@ -29,17 +29,10 @@
     }
     #reminderLine { font-size:13px; color:#333; margin-bottom:20px; }
 
-    h2.sectionTitle {
-      margin: 20px 0 10px;
-      font-size: 18px;
-      color: #444;
-    }
-
-    .offerList {
+    #offerList {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 14px;
-      margin-bottom: 30px;
     }
 
     .offer-card {
@@ -70,10 +63,10 @@
     #loading { text-align:center; margin-top:20px; font-size:16px; }
     .no-offers { color:red; text-align:center; font-weight:700; padding:16px; }
 
-    @media (max-width:1000px){ .offerList{grid-template-columns:repeat(3,1fr);} }
-    @media (max-width:700px){ .offerList{grid-template-columns:repeat(2,1fr);} }
+    @media (max-width:1000px){ #offerList{grid-template-columns:repeat(3,1fr);} }
+    @media (max-width:700px){ #offerList{grid-template-columns:repeat(2,1fr);} }
     @media (max-width:400px){
-      .offerList{grid-template-columns:1fr;}
+      #offerList{grid-template-columns:1fr;}
       .offer-card{flex-direction:column;align-items:flex-start;}
       .offer-card img{width:100%;margin-left:0;margin-bottom:10px;}
       .offer-text{width:100%;}
@@ -89,12 +82,7 @@
     <div id="infoBox"></div>
     <div id="reminderLine"></div>
 
-    <h2 class="sectionTitle">CPA Grip</h2>
-    <div id="cpagripList" class="offerList"></div>
-
-    <h2 class="sectionTitle">OGAds</h2>
-    <div id="ogadsList" class="offerList"></div>
-
+    <div id="offerList"></div>
     <div id="loading">...</div>
   </main>
 
@@ -121,18 +109,17 @@
     document.body.style.direction = isArabic ? "rtl" : "ltr";
     document.body.style.textAlign = isArabic ? "right" : "left";
 
-    const cpagripList = document.getElementById("cpagripList");
-    const ogadsList = document.getElementById("ogadsList");
+    const offerList = document.getElementById("offerList");
     const loading = document.getElementById("loading");
 
-    // ---------- CPA Grip: render ----------
-    function createCPAGripCard(o) {
+    // unified card renderer
+    function createOfferCard(o) {
       const card = document.createElement("div");
       card.className = "offer-card";
 
       const img = document.createElement("img");
-      img.src = o.picture || "";
-      img.alt = o.name_short || "offer";
+      img.src = o.image || "";
+      img.alt = o.title || "offer";
       card.appendChild(img);
 
       const text = document.createElement("div");
@@ -140,111 +127,96 @@
 
       const title = document.createElement("div");
       title.className = "offer-title";
-      title.textContent = o.name_short || "(بدون عنوان)";
+      title.textContent = o.title || "(untitled offer)";
       text.appendChild(title);
 
       const desc = document.createElement("div");
       desc.className = "offer-desc";
-      desc.textContent = o.adcopy || o.description || "";
+      desc.textContent = o.description || "";
       text.appendChild(desc);
 
       card.appendChild(text);
 
-      const targetUrl = o.link || "#";
-      card.onclick = () => { if (targetUrl && targetUrl !== "#") window.open(targetUrl, "_blank"); };
+      card.onclick = () => { if (o.url) window.open(o.url, "_blank"); };
 
       return card;
     }
 
-    // ---------- OGAds: render ----------
-    function createOgadsCard(o) {
-      const card = document.createElement("div");
-      card.className = "offer-card";
-
-      const img = document.createElement("img");
-      img.src = o.icon_url || "";
-      img.alt = o.name || "offer";
-      card.appendChild(img);
-
-      const text = document.createElement("div");
-      text.className = "offer-text";
-
-      const title = document.createElement("div");
-      title.className = "offer-title";
-      title.textContent = o.name || "(untitled offer)";
-      text.appendChild(title);
-
-      const desc = document.createElement("div");
-      desc.className = "offer-desc";
-      desc.textContent = o.adcopy || o.description || "";
-      text.appendChild(desc);
-
-      card.appendChild(text);
-
-      const targetUrl = o.click_url || "#";
-      card.onclick = () => { if (targetUrl && targetUrl !== "#") window.open(targetUrl, "_blank"); };
-
-      return card;
-    }
-
-    // ---------- Fetch CPA Grip ----------
+    // fetch CPA Grip offers
     async function fetchCPAGripOffers() {
       const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
       try {
         const res = await fetch(url);
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.offers || []);
-        return list.filter(o => parseFloat(o.payout || 0) >= 0.5);
+        return list.map(o => ({
+          title: o.name_short || o.name,
+          description: o.adcopy || o.description,
+          image: o.picture || o.icon || o.image,
+          url: o.link || o.offerlink || o.offer_url || o.preview_url,
+          payout: parseFloat(o.payout) || 0
+        }));
       } catch (err) {
-        console.error("CPA Grip error:", err);
+        console.error("Fetch error CPA Grip:", err);
         return [];
       }
     }
 
-    // ---------- Fetch OGAds ----------
+    // fetch OGAds offers
     async function fetchOgadsOffers() {
       const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
       try {
-        const ipRes = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipRes.json();
+        const ipResponse = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipResponse.json();
+        const userIp = ipData.ip;
+
         const apiUrl = new URL("https://unlockcontent.net/api/v2");
-        apiUrl.searchParams.append("ip", ipData.ip);
+        apiUrl.searchParams.append("ip", userIp);
         apiUrl.searchParams.append("user_agent", navigator.userAgent);
         apiUrl.searchParams.append("limit", "1000");
         apiUrl.searchParams.append("ctype", "0");
 
-        const res = await fetch(apiUrl, { headers: { Authorization: `Bearer ${apiKey}` } });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        return (data.offers || []).filter(o => parseFloat(o.payout || 0) >= 0.5);
+        const response = await fetch(apiUrl, {
+          headers: { Authorization: `Bearer ${apiKey}` }
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+        const list = data.offers || [];
+        return list.map(o => ({
+          title: o.name || o.title,
+          description: o.adcopy || o.description,
+          image: o.icon_url || o.image || o.picture,
+          url: o.click_url || o.clickurl || o.clickUrl || o.preview_url || o.offer_url || o.url,
+          payout: parseFloat(o.payout) || 0
+        }));
       } catch (err) {
-        console.error("OGAds error:", err);
+        console.error("Fetch error OGAds:", err);
         return [];
       }
     }
 
-    // ---------- Load ----------
     async function loadOffers() {
       loading.style.display = "block";
-      cpagripList.innerHTML = "";
-      ogadsList.innerHTML = "";
+      offerList.innerHTML = "";
 
-      const cpagrip = await fetchCPAGripOffers();
-      if (cpagrip.length) {
+      const [cpagrip, ogads] = await Promise.all([
+        fetchCPAGripOffers(),
+        fetchOgadsOffers()
+      ]);
+
+      const combined = [...cpagrip, ...ogads].filter(o => o && o.url);
+      combined.sort((a, b) => b.payout - a.payout);
+
+      if (combined.length) {
         const frag = document.createDocumentFragment();
-        cpagrip.forEach(o => frag.appendChild(createCPAGripCard(o)));
-        cpagripList.appendChild(frag);
+        combined.forEach(o => frag.appendChild(createOfferCard(o)));
+        offerList.appendChild(frag);
       } else {
-        cpagripList.innerHTML = `<div class="no-offers">${isArabic ? texts.ar.noOffers : texts.en.noOffers}</div>`;
-      }
-
-      const ogads = await fetchOgadsOffers();
-      if (ogads.length) {
-        const frag2 = document.createDocumentFragment();
-        ogads.forEach(o => frag2.appendChild(createOgadsCard(o)));
-        ogadsList.appendChild(frag2);
-      } else {
-        ogadsList.innerHTML = `<div class="no-offers">${isArabic ? texts.ar.noOffers : texts.en.noOffers}</div>`;
+        const noEl = document.createElement("div");
+        noEl.className = "no-offers";
+        noEl.textContent = (isArabic ? texts.ar.noOffers : texts.en.noOffers);
+        offerList.appendChild(noEl);
       }
 
       loading.style.display = "none";
