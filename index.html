@@ -156,8 +156,8 @@
 
     // Helper: Clean OGAds title
     function cleanOgadsTitle(title) {
-      const regex = /\b([A-Z]{2})\b[\s-].*$/;
-      return title.replace(regex, "").trim();
+      // Remove everything from a country code (2 uppercase letters) to the end
+      return title.replace(/[\s:\-–]\b[A-Z]{2}\b.*$/, "").trim();
     }
 
     // ============= CPA Grip =============
@@ -235,6 +235,7 @@
   </script>
 </body>
 </html>
+
 
 
 
