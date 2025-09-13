@@ -1,138 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Offers Grids</title>
+  <meta charset="UTF-8">
+  <title>Offers</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
       background: #f0f2f5;
-      color: #222;
+      margin: 0;
       padding: 20px;
     }
-    h2 {
-      margin: 20px 0 10px;
-      color: #1446FF;
-    }
-    .offer-list {
+    .offer-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
       margin-bottom: 40px;
     }
     .offer-card {
       background: #fff;
       border-radius: 10px;
-      padding: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
       cursor: pointer;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-      transition: transform 0.2s ease;
+      overflow: hidden;
+      transition: transform .18s ease;
       display: flex;
       flex-direction: column;
-      gap: 6px;
     }
     .offer-card:hover {
       transform: scale(1.03);
     }
     .offer-card img {
       width: 100%;
-      height: 140px;
+      height: 120px;
       object-fit: cover;
-      border-radius: 8px;
+      background: #eee;
     }
     .offer-title {
-      font-size: 15px;
-      font-weight: bold;
-      color: #000;
+      font-size: 14px;
+      font-weight: 700;
+      margin: 10px;
     }
     .offer-desc {
       font-size: 13px;
       color: #555;
+      margin: 0 10px 10px;
+    }
+    .no-offers {
+      color: red;
+      text-align: center;
+      font-weight: 700;
+      padding: 16px;
     }
   </style>
 </head>
 <body>
-  <h2>CPA Grip Offers</h2>
-  <div id="cpaGripList" class="offer-list"></div>
+  <h2>CPA Grip Grid</h2>
+  <div id="cpagrip-grid" class="offer-grid"></div>
 
-  <h2>OGAds Offers</h2>
-  <div id="ogAdsList" class="offer-list"></div>
+  <h2>OGAds Grid</h2>
+  <div id="ogads-grid" class="offer-grid"></div>
 
   <script>
-    // =============== CPA GRIP FETCH ===============
-    const cpaGripList = document.getElementById("cpaGripList");
-    const cpaGripUrl =
-      "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
+    // ================= CPA Grip =================
+    (function() {
+      const grid = document.getElementById("cpagrip-grid");
+      const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
 
-    fetch(cpaGripUrl)
-      .then((res) => res.json())
-      .then((data) => {
-        const offers = Array.isArray(data) ? data : (data.offers || []);
-        offers.forEach((o) => {
-          const card = document.createElement("div");
-          card.className = "offer-card";
-          card.innerHTML = `
-            <img src="${o.offerimage || ''}" alt="Offer">
-            <div class="offer-title">${o.offername || 'No title'}</div>
-            <div class="offer-desc">${o.offerdesc || ''}</div>
-          `;
-          card.onclick = () => window.open(o.offerlink || "#", "_blank");
-          cpaGripList.appendChild(card);
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const offers = Array.isArray(data) ? data : (data.offers || []);
+          if (!offers.length) {
+            grid.innerHTML = '<div class="no-offers">No CPA Grip offers available</div>';
+            return;
+          }
+          offers.forEach(o => {
+            const card = document.createElement("div");
+            card.className = "offer-card";
+            card.innerHTML = `
+              <img src="${o.offerimage || ''}" alt="Offer">
+              <div class="offer-title">${o.offername || 'No title'}</div>
+              <div class="offer-desc">${o.offerdesc || ''}</div>
+            `;
+            card.onclick = () => {
+              if (o.offerlink) window.open(o.offerlink, "_blank");
+            };
+            grid.appendChild(card);
+          });
+        })
+        .catch(err => {
+          console.error("CPA Grip error:", err);
+          grid.innerHTML = '<div class="no-offers">Failed to load CPA Grip offers</div>';
         });
-      })
-      .catch((err) => {
-        console.error("CPA Grip fetch error:", err);
-        cpaGripList.innerHTML = "<p>Failed to load CPA Grip offers.</p>";
-      });
+    })();
 
-    // =============== OGADS FETCH ===============
-    const ogAdsList = document.getElementById("ogAdsList");
-    const apiKey =
-      "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
+    // ================= OGAds =================
+    (function() {
+      const grid = document.getElementById("ogads-grid");
+      const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
 
-    async function fetchOgads() {
-      try {
-        const ipResponse = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipResponse.json();
-        const userIp = ipData.ip;
-        const userAgent = navigator.userAgent;
+      async function fetchOgads() {
+        try {
+          const ipRes = await fetch("https://api.ipify.org?format=json");
+          const ipData = await ipRes.json();
+          const apiUrl = new URL("https://unlockcontent.net/api/v2");
+          apiUrl.searchParams.append("ip", ipData.ip);
+          apiUrl.searchParams.append("user_agent", navigator.userAgent);
+          apiUrl.searchParams.append("limit", "1000");
+          apiUrl.searchParams.append("ctype", "0");
 
-        const apiUrl = new URL("https://unlockcontent.net/api/v2");
-        apiUrl.searchParams.append("ip", userIp);
-        apiUrl.searchParams.append("user_agent", userAgent);
-        apiUrl.searchParams.append("limit", "50");
-        apiUrl.searchParams.append("ctype", "0");
-
-        const response = await fetch(apiUrl, {
-          headers: { Authorization: `Bearer ${apiKey}` },
-        });
-        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-
-        const data = await response.json();
-        (data.offers || []).forEach((o) => {
-          const card = document.createElement("div");
-          card.className = "offer-card";
-          card.innerHTML = `
-            <img src="${o.picture || o.icon_url || ''}" alt="Offer">
-            <div class="offer-title">${o.name_short || o.name || 'No title'}</div>
-            <div class="offer-desc">${o.adcopy || o.description || ''}</div>
-          `;
-          card.onclick = () => window.open(o.link || o.click_url || "#", "_blank");
-          ogAdsList.appendChild(card);
-        });
-      } catch (err) {
-        console.error("OGAds fetch error:", err);
-        ogAdsList.innerHTML = "<p>Failed to load OGAds offers.</p>";
+          const res = await fetch(apiUrl, {
+            headers: { Authorization: `Bearer ${apiKey}` }
+          });
+          if (!res.ok) throw new Error("OGAds fetch failed");
+          const data = await res.json();
+          const offers = data.offers || [];
+          if (!offers.length) {
+            grid.innerHTML = '<div class="no-offers">No OGAds offers available</div>';
+            return;
+          }
+          offers.forEach(o => {
+            const card = document.createElement("div");
+            card.className = "offer-card";
+            card.innerHTML = `
+              <img src="${o.picture || o.icon_url || ''}" alt="Offer">
+              <div class="offer-title">${o.name || o.name_short || 'No title'}</div>
+              <div class="offer-desc">${o.adcopy || o.description || ''}</div>
+            `;
+            const url = o.link || o.click_url || o.offer_url || o.url;
+            card.onclick = () => {
+              if (url) window.open(url, "_blank");
+            };
+            grid.appendChild(card);
+          });
+        } catch (err) {
+          console.error("OGAds error:", err);
+          grid.innerHTML = '<div class="no-offers">Failed to load OGAds offers</div>';
+        }
       }
-    }
 
-    fetchOgads();
+      fetchOgads();
+    })();
   </script>
 </body>
 </html>
-
 
 
 
