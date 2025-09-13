@@ -1,231 +1,145 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>يوسف - Yousef</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Offers Grids</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       background: #f0f2f5;
       color: #222;
-      direction: rtl;
-      text-align: right;
+      padding: 20px;
     }
-    main { padding: 20px; max-width: 1000px; margin: auto; }
 
-    #flagContainer { text-align:center; margin-bottom:10px; }
-    #flagContainer img { width:60px; border-radius:5px; }
-
-    #infoBox {
-      background:#fff9e6;
-      border-right:5px solid #ff9900;
-      padding:15px 20px;
-      border-radius:8px;
-      margin-bottom:10px;
-      font-size:14px;
-      line-height:1.6;
+    h2 {
+      margin: 20px 0 10px;
+      color: #1446FF;
     }
-    #reminderLine { font-size:13px; color:#333; margin-bottom:20px; }
 
-    #offerList {
+    .offer-list {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
     }
 
     .offer-card {
-      background:#fff;
-      border-radius:10px;
-      padding:10px;
-      cursor:pointer;
-      box-shadow:0 3px 10px rgba(0,0,0,0.08);
-      transition: transform .18s ease;
-      display:flex;
-      align-items:center;
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
-    .offer-card:hover{ transform: scale(1.03); }
+
+    .offer-card:hover {
+      transform: scale(1.03);
+    }
 
     .offer-card img {
-      width:30%;
-      height:90px;
-      object-fit:cover;
-      border-radius:8px;
-      margin-left:10px;
-      flex-shrink:0;
-      background:#eee;
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 8px;
     }
-    .offer-text { width:70%; display:flex; flex-direction:column; justify-content:center; }
-    .offer-title { font-size:14px; font-weight:700; }
-    .offer-desc { display:none; }
 
-    #loading { text-align:center; margin-top:20px; font-size:16px; }
-    .no-offers { color:red; text-align:center; font-weight:700; padding:16px; }
+    .offer-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #000;
+    }
 
-    @media (max-width:1000px){ #offerList{grid-template-columns:repeat(3,1fr);} }
-    @media (max-width:700px){ #offerList{grid-template-columns:repeat(2,1fr);} }
-    @media (max-width:400px){
-      #offerList{grid-template-columns:1fr;}
-      .offer-card{flex-direction:column;align-items:flex-start;}
-      .offer-card img{width:100%;margin-left:0;margin-bottom:10px;}
-      .offer-text{width:100%;}
+    .offer-desc {
+      font-size: 13px;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <main>
-    <div id="flagContainer">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
-    </div>
+  <h2>CPA Grip Offers</h2>
+  <div id="cpaGripList" class="offer-list"></div>
 
-    <div id="infoBox"></div>
-    <div id="reminderLine"></div>
-
-    <div id="offerList"></div>
-    <div id="loading">...</div>
-  </main>
+  <h2>OGAds Offers</h2>
+  <div id="ogAdsList" class="offer-list"></div>
 
   <script>
-    // language toggle
-    const userLang = navigator.language || navigator.userLanguage || "ar";
-    const isArabic = userLang.startsWith("ar");
-    const texts = {
-      ar: {
-        info: "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.",
-        reminder: "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار",
-        noOffers: "لا توجد عروض متاحة حالياً."
-      },
-      en: {
-        info: "Hello, my name is Yousef from Palestine. My dream is to become a successful developer and make my country proud. I need a computer to achieve that. You can help by registering for free on the sites below — they reward me for promoting them. Each registration takes less than a minute. The more sites you join, the closer I get to my dream. Please pray for my father's forgiveness.",
-        reminder: "Even after finishing registrations you can come back later — I'll keep adding new sites.",
-        noOffers: "No offers available right now."
-      }
-    };
+    // =============== CPA GRIP FETCH ===============
+    const cpaGripList = document.getElementById("cpaGripList");
+    const cpaGripUrl =
+      "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
 
-    document.documentElement.lang = isArabic ? "ar" : "en";
-    document.getElementById("infoBox").textContent = (isArabic ? texts.ar.info : texts.en.info);
-    document.getElementById("reminderLine").textContent = (isArabic ? texts.ar.reminder : texts.en.reminder);
-    document.body.style.direction = isArabic ? "rtl" : "ltr";
-    document.body.style.textAlign = isArabic ? "right" : "left";
+    fetch(cpaGripUrl)
+      .then((res) => res.json())
+      .then((data) => {
+        const offers = Array.isArray(data) ? data : (data.offers || []);
+        offers.forEach((o) => {
+          const card = document.createElement("div");
+          card.className = "offer-card";
+          card.innerHTML = `
+            <img src="${o.offerimage || ''}" alt="Offer">
+            <div class="offer-title">${o.title || 'No title'}</div>
+            <div class="offer-desc">${o.adcopy || o.description || ''}</div>
+          `;
+          card.onclick = () => window.open(o.offerlink || o.offer_url || o.preview_url, "_blank");
+          cpaGripList.appendChild(card);
+        });
+      })
+      .catch((err) => {
+        console.error("CPA Grip fetch error:", err);
+        cpaGripList.innerHTML = "<p>Failed to load CPA Grip offers.</p>";
+      });
 
-    const offerList = document.getElementById("offerList");
-    const loading = document.getElementById("loading");
+    // =============== OGADS FETCH ===============
+    const ogAdsList = document.getElementById("ogAdsList");
+    const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
 
-    // unified card renderer
-    function createOfferCard(o) {
-      const card = document.createElement("div");
-      card.className = "offer-card";
-
-      const img = document.createElement("img");
-      img.src = o.image || "";
-      img.alt = o.title || "offer";
-      card.appendChild(img);
-
-      const text = document.createElement("div");
-      text.className = "offer-text";
-
-      const title = document.createElement("div");
-      title.className = "offer-title";
-      title.textContent = o.title || "(untitled offer)";
-      text.appendChild(title);
-
-      const desc = document.createElement("div");
-      desc.className = "offer-desc";
-      desc.textContent = o.description || "";
-      text.appendChild(desc);
-
-      card.appendChild(text);
-
-      card.onclick = () => { if (o.url) window.open(o.url, "_blank"); };
-
-      return card;
-    }
-
-    // fetch CPA Grip offers
-    async function fetchCPAGripOffers() {
-      const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.offers || []);
-        return list.map(o => ({
-          title: o.name_short || o.name,
-          description: o.adcopy || o.description,
-          image: o.picture || o.icon || o.image,
-          url: o.link || o.offerlink || o.offer_url || o.preview_url,
-          payout: parseFloat(o.payout) || 0
-        }));
-      } catch (err) {
-        console.error("Fetch error CPA Grip:", err);
-        return [];
-      }
-    }
-
-    // fetch OGAds offers
-    async function fetchOgadsOffers() {
-      const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
+    async function fetchOgads() {
       try {
         const ipResponse = await fetch("https://api.ipify.org?format=json");
         const ipData = await ipResponse.json();
         const userIp = ipData.ip;
+        const userAgent = navigator.userAgent;
 
         const apiUrl = new URL("https://unlockcontent.net/api/v2");
         apiUrl.searchParams.append("ip", userIp);
-        apiUrl.searchParams.append("user_agent", navigator.userAgent);
-        apiUrl.searchParams.append("limit", "1000");
+        apiUrl.searchParams.append("user_agent", userAgent);
+        apiUrl.searchParams.append("limit", "50");
         apiUrl.searchParams.append("ctype", "0");
 
         const response = await fetch(apiUrl, {
-          headers: { Authorization: `Bearer ${apiKey}` }
+          headers: { Authorization: `Bearer ${apiKey}` },
         });
 
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
         const data = await response.json();
-        const list = data.offers || [];
-        return list.map(o => ({
-          title: o.name || o.title,
-          description: o.adcopy || o.description,
-          image: o.icon_url || o.image || o.picture,
-          url: o.click_url || o.clickurl || o.clickUrl || o.preview_url || o.offer_url || o.url,
-          payout: parseFloat(o.payout) || 0
-        }));
+
+        (data.offers || []).forEach((o) => {
+          const card = document.createElement("div");
+          card.className = "offer-card";
+          card.innerHTML = `
+            <img src="${o.picture || ''}" alt="Offer">
+            <div class="offer-title">${o.name_short || o.name || 'No title'}</div>
+            <div class="offer-desc">${o.adcopy || o.description || ''}</div>
+          `;
+          card.onclick = () => window.open(o.link, "_blank");
+          ogAdsList.appendChild(card);
+        });
       } catch (err) {
-        console.error("Fetch error OGAds:", err);
-        return [];
+        console.error("OGAds fetch error:", err);
+        ogAdsList.innerHTML = "<p>Failed to load OGAds offers.</p>";
       }
     }
 
-    async function loadOffers() {
-      loading.style.display = "block";
-      offerList.innerHTML = "";
-
-      const [cpagrip, ogads] = await Promise.all([
-        fetchCPAGripOffers(),
-        fetchOgadsOffers()
-      ]);
-
-      const combined = [...cpagrip, ...ogads].filter(o => o && o.url);
-      combined.sort((a, b) => b.payout - a.payout);
-
-      if (combined.length) {
-        const frag = document.createDocumentFragment();
-        combined.forEach(o => frag.appendChild(createOfferCard(o)));
-        offerList.appendChild(frag);
-      } else {
-        const noEl = document.createElement("div");
-        noEl.className = "no-offers";
-        noEl.textContent = (isArabic ? texts.ar.noOffers : texts.en.noOffers);
-        offerList.appendChild(noEl);
-      }
-
-      loading.style.display = "none";
-    }
-
-    loadOffers();
+    fetchOgads();
   </script>
 </body>
 </html>
+
 
 
 
