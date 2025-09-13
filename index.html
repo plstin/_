@@ -132,6 +132,14 @@
         const countryCode = data.country_code;
         isArabic = arabicCountries.includes(countryCode);
 
+        // Disable auto-translation only for Arabic countries
+        if (isArabic) {
+          const meta = document.createElement("meta");
+          meta.name = "google";
+          meta.content = "notranslate";
+          document.head.appendChild(meta);
+        }
+
         document.body.style.direction = isArabic ? "rtl" : "ltr";
         document.body.style.textAlign = isArabic ? "right" : "left";
         document.getElementById("infoBox").style.borderRight = isArabic ? "5px solid #ff9900" : "none";
