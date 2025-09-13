@@ -169,7 +169,7 @@
     ];
 
     function replaceIfContainsContent(title) {
-      if (title.includes("محتوى") || title.includes("المحتوى")) {
+      if (title.includes("محتوى") || title.includes("المحتوى") || title.includes("محتواك") || title.includes("هنا")) {
         return arabicReplacements[Math.floor(Math.random() * arabicReplacements.length)];
       }
       return title;
