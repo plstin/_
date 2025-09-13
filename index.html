@@ -80,20 +80,12 @@
       white-space: normal;
       overflow: visible;
     }
-    .offer-desc {
-      display: none;
-    }
     .no-offers {
       color: red;
       text-align: center;
       font-weight: 700;
       padding: 16px;
       grid-column: 1 / -1;
-    }
-    #loading {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 16px;
     }
     @media (max-width: 1000px) {
       .offer-grid { grid-template-columns: repeat(3, 1fr); }
@@ -122,17 +114,12 @@
     <!-- Reminder Line -->
     <div id="reminderLine"></div>
 
-    <!-- CPA Grip -->
-    <div id="cpagrip-grid" class="offer-grid"></div>
-
-    <!-- OGAds -->
-    <div id="ogads-grid" class="offer-grid"></div>
+    <!-- Offers -->
+    <div id="offers-container" class="offer-grid"></div>
   </main>
 
   <script>
-    // Language detection (Arabic vs English)
-    const isArabic = navigator.language.startsWith("ar");
-
+    // ================= Texts =================
     const texts = {
       info_ar: "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.",
       info_en: "Hello, my name is Yousef from Palestine. My dream is to become a successful developer and make my country proud. To achieve this, I need a computer. You can support me by registering for free on the websites below. Each registration helps me get closer to my dream. I also kindly ask you to pray for my parents.",
@@ -142,26 +129,54 @@
       noOffers_en: "❌ No offers available at the moment"
     };
 
-    // Set text content
-    document.getElementById("infoBox").innerText = isArabic ? texts.info_ar : texts.info_en;
-    document.getElementById("reminderLine").innerText = isArabic ? texts.reminder_ar : texts.reminder_en;
+    // ================= Arabic-speaking countries =================
+    const arabicCountries = [
+      "AE","SA","EG","MA","DZ","LY","TN","YE","SD","SY","IQ","JO","KW","BH","QA","OM","PS","MR","SO","LB","KM"
+    ];
+
+    let isArabic = false;
+
+    // Detect country via IP
+    async function detectCountryAndSetText() {
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
+        const countryCode = data.country_code;
+        isArabic = arabicCountries.includes(countryCode);
+
+        document.getElementById("infoBox").innerText = isArabic ? texts.info_ar : texts.info_en;
+        document.getElementById("reminderLine").innerText = isArabic ? texts.reminder_ar : texts.reminder_en;
+      } catch (err) {
+        console.error("Country detection failed, defaulting to English:", err);
+        document.getElementById("infoBox").innerText = texts.info_en;
+        document.getElementById("reminderLine").innerText = texts.reminder_en;
+      }
+    }
+
+    detectCountryAndSetText();
+
+    // ================= Offer Handling =================
+    const container = document.getElementById("offers-container");
+    let cpagripOffersCount = 0;
+    let ogadsOffersCount = 0;
+
+    function checkNoOffers() {
+      if (cpagripOffersCount === 0 && ogadsOffersCount === 0) {
+        container.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
+      }
+    }
 
     // ============= CPA Grip =============
     (function() {
-      const grid = document.getElementById("cpagrip-grid");
       const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
 
       fetch(url)
         .then(res => res.json())
         .then(data => {
           const offers = data.offers || data;
-          if (!offers || !offers.length) {
-            grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
-            return;
-          }
-          offers
-            .filter(o => parseFloat(o.payout) >= 0.5)
-            .forEach(o => {
+          if (offers && offers.length) {
+            offers.filter(o => parseFloat(o.payout) >= 0.5).forEach(o => {
+              cpagripOffersCount++;
               const card = document.createElement("div");
               card.className = "offer-card";
               card.innerHTML = `
@@ -170,24 +185,20 @@
                   <div class="offer-title">${o.title || 'No title'}</div>
                 </div>
               `;
-              card.onclick = () => {
-                if (o.offerlink) window.open(o.offerlink, "_blank");
-              };
-              grid.appendChild(card);
+              card.onclick = () => { if (o.offerlink) window.open(o.offerlink, "_blank"); };
+              container.appendChild(card);
             });
-          if (!grid.children.length) {
-            grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
           }
+          checkNoOffers();
         })
         .catch(err => {
           console.error("CPA Grip error:", err);
-          grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
+          checkNoOffers();
         });
     })();
 
     // ============= OGAds =============
     (function() {
-      const grid = document.getElementById("ogads-grid");
       const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
 
       async function fetchOgads() {
@@ -200,19 +211,13 @@
           apiUrl.searchParams.append("limit", "1000");
           apiUrl.searchParams.append("ctype", "0");
 
-          const res = await fetch(apiUrl, {
-            headers: { Authorization: `Bearer ${apiKey}` }
-          });
+          const res = await fetch(apiUrl, { headers: { Authorization: `Bearer ${apiKey}` } });
           if (!res.ok) throw new Error("OGAds fetch failed");
           const data = await res.json();
           const offers = data.offers || [];
-          if (!offers.length) {
-            grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
-            return;
-          }
-          offers
-            .filter(o => parseFloat(o.payout) >= 0.5)
-            .forEach(o => {
+          if (offers && offers.length) {
+            offers.filter(o => parseFloat(o.payout) >= 0.5).forEach(o => {
+              ogadsOffersCount++;
               const card = document.createElement("div");
               card.className = "offer-card";
               const img = o.icon_url || o.picture || "";
@@ -225,17 +230,14 @@
                   <div class="offer-title">${title}</div>
                 </div>
               `;
-              card.onclick = () => {
-                if (url) window.open(url, "_blank");
-              };
-              grid.appendChild(card);
+              card.onclick = () => { if (url) window.open(url, "_blank"); };
+              container.appendChild(card);
             });
-          if (!grid.children.length) {
-            grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
           }
+          checkNoOffers();
         } catch (err) {
           console.error("OGAds error:", err);
-          grid.innerHTML = `<div class="no-offers">${isArabic ? texts.noOffers_ar : texts.noOffers_en}</div>`;
+          checkNoOffers();
         }
       }
 
