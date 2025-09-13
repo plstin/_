@@ -10,6 +10,12 @@
       margin: 0;
       padding: 20px;
     }
+    h2 {
+      margin-top: 30px;
+      margin-bottom: 10px;
+      font-size: 20px;
+      color: #333;
+    }
     .offer-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -61,7 +67,7 @@
   <div id="ogads-grid" class="offer-grid"></div>
 
   <script>
-    // ================= CPA Grip =================
+    // ============= CPA Grip =============
     (function() {
       const grid = document.getElementById("cpagrip-grid");
       const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
@@ -69,8 +75,8 @@
       fetch(url)
         .then(res => res.json())
         .then(data => {
-          const offers = Array.isArray(data) ? data : (data.offers || []);
-          if (!offers.length) {
+          const offers = data.offers || data; // sometimes wrapped in "offers"
+          if (!offers || !offers.length) {
             grid.innerHTML = '<div class="no-offers">No CPA Grip offers available</div>';
             return;
           }
@@ -78,9 +84,9 @@
             const card = document.createElement("div");
             card.className = "offer-card";
             card.innerHTML = `
-              <img src="${o.offerimage || ''}" alt="Offer">
-              <div class="offer-title">${o.offername || 'No title'}</div>
-              <div class="offer-desc">${o.offerdesc || ''}</div>
+              <img src="${o.offerphoto || ''}" alt="Offer">
+              <div class="offer-title">${o.title || 'No title'}</div>
+              <div class="offer-desc">${o.description || ''}</div>
             `;
             card.onclick = () => {
               if (o.offerlink) window.open(o.offerlink, "_blank");
@@ -94,7 +100,7 @@
         });
     })();
 
-    // ================= OGAds =================
+    // ============= OGAds =============
     (function() {
       const grid = document.getElementById("ogads-grid");
       const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
@@ -122,12 +128,16 @@
           offers.forEach(o => {
             const card = document.createElement("div");
             card.className = "offer-card";
+            const img = o.icon_url || o.picture || "";
+            const title = o.name || o.name_short || "No title";
+            const desc = o.adcopy || o.description || "";
+            const url = o.click_url || o.link || o.offer_url || o.url;
+
             card.innerHTML = `
-              <img src="${o.picture || o.icon_url || ''}" alt="Offer">
-              <div class="offer-title">${o.name || o.name_short || 'No title'}</div>
-              <div class="offer-desc">${o.adcopy || o.description || ''}</div>
+              <img src="${img}" alt="Offer">
+              <div class="offer-title">${title}</div>
+              <div class="offer-desc">${desc}</div>
             `;
-            const url = o.link || o.click_url || o.offer_url || o.url;
             card.onclick = () => {
               if (url) window.open(url, "_blank");
             };
@@ -144,6 +154,7 @@
   </script>
 </body>
 </html>
+
 
 
 
