@@ -124,7 +124,28 @@
 
     let isArabic = false;
 
-    // Detect country via IP
+    // Helper: Clean OGAds title
+    function cleanOgadsTitle(title) {
+      return title.replace(/[\s:\-–]\b[A-Z]{2}\b.*$/, "").trim();
+    }
+
+    // Replacement titles (Arabic only)
+    const arabicReplacements = [
+      "تحميل ملف PDF مجاني",
+      "الوصول إلى ملف مجاني",
+      "تحميل أداة مجانية",
+      "افتح كتاب إلكتروني مجاني",
+      "الحصول على تقرير مجاني"
+    ];
+
+    function replaceIfContainsContent(title) {
+      if (title.includes("محتوى") || title.includes("المحتوى") || title.includes("محتواك") || title.includes("هنا")) {
+        return arabicReplacements[Math.floor(Math.random() * arabicReplacements.length)];
+      }
+      return title;
+    }
+
+    // ================= Country detection =================
     async function detectCountryAndSetText() {
       try {
         const res = await fetch("https://ipapi.co/json/");
@@ -157,34 +178,10 @@
       }
     }
 
-    detectCountryAndSetText();
-
-    // ================= Offer Handling =================
+    // ================= Offer loading =================
     const container = document.getElementById("offers-container");
 
-    // Helper: Clean OGAds title
-    function cleanOgadsTitle(title) {
-      return title.replace(/[\s:\-–]\b[A-Z]{2}\b.*$/, "").trim();
-    }
-
-    // Replacement titles (Arabic only)
-    const arabicReplacements = [
-      "تحميل ملف PDF مجاني",
-      "الوصول إلى ملف مجاني",
-      "تحميل أداة مجانية",
-      "افتح كتاب إلكتروني مجاني",
-      "الحصول على تقرير مجاني"
-    ];
-
-    function replaceIfContainsContent(title) {
-      if (title.includes("محتوى") || title.includes("المحتوى") || title.includes("محتواك") || title.includes("هنا")) {
-        return arabicReplacements[Math.floor(Math.random() * arabicReplacements.length)];
-      }
-      return title;
-    }
-
-    // ============= CPA Grip =============
-    (function() {
+    function loadCpagripOffers() {
       const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
 
       fetch(url)
@@ -211,56 +208,60 @@
         .catch(err => {
           console.error("CPA Grip error:", err);
         });
-    })();
+    }
 
-    // ============= OGAds =============
-    (function() {
+    async function loadOgadsOffers() {
       const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        const apiUrl = new URL("https://unlockcontent.net/api/v2");
+        apiUrl.searchParams.append("ip", ipData.ip);
+        apiUrl.searchParams.append("user_agent", navigator.userAgent);
+        apiUrl.searchParams.append("limit", "1000");
+        apiUrl.searchParams.append("ctype", "0");
 
-      async function fetchOgads() {
-        try {
-          const ipRes = await fetch("https://api.ipify.org?format=json");
-          const ipData = await ipRes.json();
-          const apiUrl = new URL("https://unlockcontent.net/api/v2");
-          apiUrl.searchParams.append("ip", ipData.ip);
-          apiUrl.searchParams.append("user_agent", navigator.userAgent);
-          apiUrl.searchParams.append("limit", "1000");
-          apiUrl.searchParams.append("ctype", "0");
+        const res = await fetch(apiUrl, { headers: { Authorization: `Bearer ${apiKey}` } });
+        if (!res.ok) throw new Error("OGAds fetch failed");
+        const data = await res.json();
+        const offers = data.offers || [];
+        if (offers && offers.length) {
+          offers.filter(o => parseFloat(o.payout) >= 0.5).forEach(o => {
+            const img = o.icon_url || o.picture || "";
+            const rawTitle = o.name || o.name_short || "No title";
+            let title = cleanOgadsTitle(rawTitle);
+            title = replaceIfContainsContent(title);
+            const url = o.click_url || o.link || o.offer_url || o.url;
 
-          const res = await fetch(apiUrl, { headers: { Authorization: `Bearer ${apiKey}` } });
-          if (!res.ok) throw new Error("OGAds fetch failed");
-          const data = await res.json();
-          const offers = data.offers || [];
-          if (offers && offers.length) {
-            offers.filter(o => parseFloat(o.payout) >= 0.5).forEach(o => {
-              const img = o.icon_url || o.picture || "";
-              const rawTitle = o.name || o.name_short || "No title";
-              let title = cleanOgadsTitle(rawTitle);
-              title = replaceIfContainsContent(title);
-              const url = o.click_url || o.link || o.offer_url || o.url;
-
-              const card = document.createElement("div");
-              card.className = "offer-card";
-              card.innerHTML = `
-                <img src="${img}" alt="Offer">
-                <div class="offer-text">
-                  <div class="offer-title">${title}</div>
-                </div>
-              `;
-              card.onclick = () => { if (url) window.open(url, "_blank"); };
-              container.appendChild(card);
-            });
-          }
-        } catch (err) {
-          console.error("OGAds error:", err);
+            const card = document.createElement("div");
+            card.className = "offer-card";
+            card.innerHTML = `
+              <img src="${img}" alt="Offer">
+              <div class="offer-text">
+                <div class="offer-title">${title}</div>
+              </div>
+            `;
+            card.onclick = () => { if (url) window.open(url, "_blank"); };
+            container.appendChild(card);
+          });
         }
+      } catch (err) {
+        console.error("OGAds error:", err);
       }
+    }
 
-      fetchOgads();
-    })();
+    // ================= Init =================
+    async function init() {
+      await detectCountryAndSetText();
+      loadCpagripOffers();
+      loadOgadsOffers();
+    }
+
+    init();
   </script>
 </body>
 </html>
+
 
 
 
