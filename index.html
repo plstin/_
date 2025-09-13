@@ -101,12 +101,6 @@
       font-size: 16px;
     }
 
-    .no-offers {
-      color: red;
-      font-weight: bold;
-      text-align: center;
-    }
-
     @media (max-width: 1000px) {
       #offerList {
         grid-template-columns: repeat(3, 1fr);
@@ -144,23 +138,41 @@
       <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="علم فلسطين">
     </div>
 
-    <div id="infoBox">
-      السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.
-    </div>
-
-    <div id="reminderLine">
-      حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار
-    </div>
+    <div id="infoBox"></div>
+    <div id="reminderLine"></div>
 
     <div id="offerList"></div>
     <div id="loading">...</div>
   </main>
 
   <script>
+    // --- Language detection & text setup ---
+    const userLang = navigator.language || navigator.userLanguage;
+    const isArabic = userLang.startsWith("ar");
+
+    const translations = {
+      ar: {
+        info: "السلام عليكم، إسمي يوسف من فلسطين و حلمي هو أن أصبح مطورا ناجحا، لأكون مصدر فخر لوطني، فلهذا يجب علي الحصول على كمبيوتر، و يمكنكم مساعدتي عن طريق التسجيل بالمجان في المواقع أسفله، فهي تكافئني مقابل الترويج لها، الأمر لا يتطلب أكثر من دقيقة لكل موقع، كلما تسجلتم في مواقع أكثر كلما إقتربت من تحقيق حلمي، و أرجو منكم الدعاء لوالدي بالمغفرة.",
+        reminder: "حتى بعد إنتهاءكم من جميع التسجيلات، يمكنكم العودة لاحقا لأنني سأضيف مواقع جديدة بإستمرار",
+        noOffers: "لا توجد عروض متاحة حالياً."
+      },
+      en: {
+        info: "Hello, my name is Yousef from Palestine. My dream is to become a successful developer and make my country proud. For this, I need a computer. You can help me by registering for free on the websites below — they reward me for promoting them. Each registration takes less than a minute. The more sites you join, the closer I get to achieving my dream. Please also pray for my father’s forgiveness.",
+        reminder: "Even after completing all registrations, you can come back later as I will keep adding new sites.",
+        noOffers: "No offers available right now."
+      }
+    };
+
+    document.documentElement.lang = isArabic ? "ar" : "en";
+    document.body.style.direction = isArabic ? "rtl" : "ltr";
+    document.body.style.textAlign = isArabic ? "right" : "left";
+
+    document.getElementById("infoBox").textContent = isArabic ? translations.ar.info : translations.en.info;
+    document.getElementById("reminderLine").textContent = isArabic ? translations.ar.reminder : translations.en.reminder;
+
+    // --- Offer card creation ---
     const offerList = document.getElementById("offerList");
     const loading = document.getElementById("loading");
-
-    let isArabicUser = true; 
 
     function createOfferCard(offer) {
       const card = document.createElement("div");
@@ -178,16 +190,13 @@
       title.textContent = offer.name_short || offer.name;
       textContainer.appendChild(title);
 
-      const desc = document.createElement("div");
-      desc.className = "offer-desc";
-      textContainer.appendChild(desc);
-
       card.appendChild(textContainer);
       card.onclick = () => window.open(offer.link, "_blank");
 
       return card;
     }
 
+    // --- Fetch CPA Grip offers ---
     async function fetchCPAGripOffers() {
       const offersUrl = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
       try {
@@ -203,6 +212,7 @@
       }
     }
 
+    // --- Fetch OGAds offers ---
     async function fetchOgadsOffers() {
       const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
       try {
@@ -237,17 +247,14 @@
       }
     }
 
+    // --- Load all offers ---
     async function loadOffers() {
       loading.style.display = "block";
       try {
         const [cpagripOffers, ogadsOffers] = await Promise.all([fetchCPAGripOffers(), fetchOgadsOffers()]);
         const allOffers = [...cpagripOffers, ...ogadsOffers];
         if (!allOffers.length) {
-          if (isArabicUser) {
-            offerList.innerHTML = "<p class='no-offers'>لا توجد عروض متاحة حالياً.</p>";
-          } else {
-            offerList.innerHTML = "<p class='no-offers'>No offers available right now.</p>";
-          }
+          offerList.innerHTML = `<p>${isArabic ? translations.ar.noOffers : translations.en.noOffers}</p>`;
           return;
         }
         const sortedOffers = allOffers.sort((a, b) => parseFloat(b.payout) - parseFloat(a.payout));
@@ -260,45 +267,8 @@
       }
     }
 
-    async function adjustForLanguage() {
-      try {
-        const res = await fetch("https://ipapi.co/json/");
-        const data = await res.json();
-        const countryCode = data.country_code;
-
-        const arabicCountries = [
-          "PS","SA","AE","EG","MA","DZ","TN","LY","SD","KW","QA","BH","OM","YE","IQ","JO","LB","SY","MR","SO","DJ","KM"
-        ];
-
-        if (!arabicCountries.includes(countryCode)) {
-          isArabicUser = false; 
-          const infoBox = document.getElementById("infoBox");
-          const reminder = document.getElementById("reminderLine");
-
-          infoBox.innerHTML = 
-            `Hello, my name is Yousef from Palestine. My dream is to become a successful developer 
-            and make my country proud. To achieve this, I need a computer.  
-            You can support me by registering for free on the websites below.  
-            Each registration helps me get closer to my dream.  
-            I also kindly ask you to pray for my parents.`;
-
-          reminder.textContent = 
-            "Even after you finish all registrations, you can come back later because I will keep adding new sites.";
-
-          infoBox.style.direction = "ltr";
-          infoBox.style.textAlign = "left";
-          reminder.style.direction = "ltr";
-          reminder.style.textAlign = "left";
-
-          infoBox.style.borderRight = "none";
-          infoBox.style.borderLeft = "5px solid #ff9900";
-        }
-      } catch (err) {
-        console.error("Geolocation error:", err);
-      }
-    }
-
-    adjustForLanguage().then(loadOffers);
+    loadOffers();
   </script>
 </body>
 </html>
+
