@@ -205,7 +205,7 @@
               const card = document.createElement("div");
               card.className = "offer-card";
               const img = o.icon_url || o.picture || "";
-              const title = o.name || o.name_short || "No title";
+              const title = o.name || o.name_short || "No title"; // clean offer name only
               const url = o.click_url || o.link || o.offer_url || o.url;
 
               card.innerHTML = `
@@ -228,6 +228,7 @@
   </script>
 </body>
 </html>
+
 
 
 
