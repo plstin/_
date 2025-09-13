@@ -29,10 +29,17 @@
     }
     #reminderLine { font-size:13px; color:#333; margin-bottom:20px; }
 
-    #offerList {
+    h2.sectionTitle {
+      margin: 20px 0 10px;
+      font-size: 18px;
+      color: #444;
+    }
+
+    .offerList {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 14px;
+      margin-bottom: 30px;
     }
 
     .offer-card {
@@ -63,10 +70,10 @@
     #loading { text-align:center; margin-top:20px; font-size:16px; }
     .no-offers { color:red; text-align:center; font-weight:700; padding:16px; }
 
-    @media (max-width:1000px){ #offerList{grid-template-columns:repeat(3,1fr);} }
-    @media (max-width:700px){ #offerList{grid-template-columns:repeat(2,1fr);} }
+    @media (max-width:1000px){ .offerList{grid-template-columns:repeat(3,1fr);} }
+    @media (max-width:700px){ .offerList{grid-template-columns:repeat(2,1fr);} }
     @media (max-width:400px){
-      #offerList{grid-template-columns:1fr;}
+      .offerList{grid-template-columns:1fr;}
       .offer-card{flex-direction:column;align-items:flex-start;}
       .offer-card img{width:100%;margin-left:0;margin-bottom:10px;}
       .offer-text{width:100%;}
@@ -82,12 +89,17 @@
     <div id="infoBox"></div>
     <div id="reminderLine"></div>
 
-    <div id="offerList"></div>
+    <h2 class="sectionTitle">CPA Grip</h2>
+    <div id="cpagripList" class="offerList"></div>
+
+    <h2 class="sectionTitle">OGAds</h2>
+    <div id="ogadsList" class="offerList"></div>
+
     <div id="loading">...</div>
   </main>
 
   <script>
-    // language toggle (kept from earlier)
+    // language toggle
     const userLang = navigator.language || navigator.userLanguage || "ar";
     const isArabic = userLang.startsWith("ar");
     const texts = {
@@ -109,18 +121,18 @@
     document.body.style.direction = isArabic ? "rtl" : "ltr";
     document.body.style.textAlign = isArabic ? "right" : "left";
 
-    const offerList = document.getElementById("offerList");
+    const cpagripList = document.getElementById("cpagripList");
+    const ogadsList = document.getElementById("ogadsList");
     const loading = document.getElementById("loading");
 
-    // ---------- CPA Grip: render using CPA Grip fields (don't normalize) ----------
+    // ---------- CPA Grip: render ----------
     function createCPAGripCard(o) {
       const card = document.createElement("div");
       card.className = "offer-card";
 
-      // CPA Grip image field is 'picture' in your examples
       const img = document.createElement("img");
-      img.src = o.picture || o.icon || o.image || ""; // fallback chain
-      img.alt = o.name_short || o.name || "offer";
+      img.src = o.picture || "";
+      img.alt = o.name_short || "offer";
       card.appendChild(img);
 
       const text = document.createElement("div");
@@ -128,8 +140,7 @@
 
       const title = document.createElement("div");
       title.className = "offer-title";
-      // CPA Grip uses name_short or name
-      title.textContent = o.name_short || o.name || "(untitled offer)";
+      title.textContent = o.name_short || "(بدون عنوان)";
       text.appendChild(title);
 
       const desc = document.createElement("div");
@@ -139,21 +150,19 @@
 
       card.appendChild(text);
 
-      // CPA Grip link: sometimes 'link' or 'offerlink' or 'offer_url' or 'preview_url'
-      const targetUrl = o.link || o.offerlink || o.offer_url || o.preview_url || o.offer_click || "#";
+      const targetUrl = o.link || "#";
       card.onclick = () => { if (targetUrl && targetUrl !== "#") window.open(targetUrl, "_blank"); };
 
       return card;
     }
 
-    // ---------- OGAds: render using OGAds fields (don't normalize) ----------
+    // ---------- OGAds: render ----------
     function createOgadsCard(o) {
       const card = document.createElement("div");
       card.className = "offer-card";
 
-      // OGAds image field commonly 'icon_url' (fallback to other names)
       const img = document.createElement("img");
-      img.src = o.icon_url || o.image || o.picture || o.offer_icon || "";
+      img.src = o.icon_url || "";
       img.alt = o.name || "offer";
       card.appendChild(img);
 
@@ -162,7 +171,7 @@
 
       const title = document.createElement("div");
       title.className = "offer-title";
-      title.textContent = o.name || o.title || "(untitled offer)";
+      title.textContent = o.name || "(untitled offer)";
       text.appendChild(title);
 
       const desc = document.createElement("div");
@@ -172,105 +181,76 @@
 
       card.appendChild(text);
 
-      // OGAds URL field commonly 'click_url' or 'clickurl' or 'offer_url'
-      const targetUrl = o.click_url || o.clickurl || o.clickUrl || o.preview_url || o.offer_url || o.url || "#";
+      const targetUrl = o.click_url || "#";
       card.onclick = () => { if (targetUrl && targetUrl !== "#") window.open(targetUrl, "_blank"); };
 
       return card;
     }
 
-    // ---------- Fetch CPA Grip offers (using the fields from your snippets) ----------
+    // ---------- Fetch CPA Grip ----------
     async function fetchCPAGripOffers() {
       const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
       try {
         const res = await fetch(url);
         const data = await res.json();
-        // CPA Grip returns an object with offers array in many examples
         const list = Array.isArray(data) ? data : (data.offers || []);
-        // Filter and keep original objects (no normalization)
-        return list.filter(o => {
-          // keep minimum payout if present; if not present, keep anyway
-          if (typeof o.payout !== "undefined") {
-            const p = parseFloat(o.payout || 0);
-            return !isNaN(p) ? p >= 0.5 : true;
-          }
-          return true;
-        });
+        return list.filter(o => parseFloat(o.payout || 0) >= 0.5);
       } catch (err) {
-        console.error("Fetch error CPA Grip:", err);
+        console.error("CPA Grip error:", err);
         return [];
       }
     }
 
-    // ---------- Fetch OGAds/unlockcontent offers (using the fields from your snippets) ----------
+    // ---------- Fetch OGAds ----------
     async function fetchOgadsOffers() {
-      const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af"; // as in your snippets
+      const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
       try {
-        // get client IP (your code used ipify)
-        const ipResponse = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipResponse.json();
-        const userIp = ipData.ip;
-
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
         const apiUrl = new URL("https://unlockcontent.net/api/v2");
-        apiUrl.searchParams.append("ip", userIp);
+        apiUrl.searchParams.append("ip", ipData.ip);
         apiUrl.searchParams.append("user_agent", navigator.userAgent);
         apiUrl.searchParams.append("limit", "1000");
         apiUrl.searchParams.append("ctype", "0");
 
-        const response = await fetch(apiUrl, {
-          headers: { Authorization: `Bearer ${apiKey}` }
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        const data = await response.json();
-        // unlockcontent returns data.offers array
-        const list = data.offers || [];
-        return list.filter(o => {
-          if (typeof o.payout !== "undefined") {
-            const p = parseFloat(o.payout || 0);
-            return !isNaN(p) ? p >= 0.5 : true;
-          }
-          return true;
-        });
+        const res = await fetch(apiUrl, { headers: { Authorization: `Bearer ${apiKey}` } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return (data.offers || []).filter(o => parseFloat(o.payout || 0) >= 0.5);
       } catch (err) {
-        console.error("Fetch error OGAds/unlockcontent:", err);
+        console.error("OGAds error:", err);
         return [];
       }
     }
 
-    // ---------- Load sequentially: CPA Grip offers first, then OGAds, into the SAME list ----------
-    async function loadOffersSequential() {
+    // ---------- Load ----------
+    async function loadOffers() {
       loading.style.display = "block";
-      offerList.innerHTML = "";
+      cpagripList.innerHTML = "";
+      ogadsList.innerHTML = "";
 
-      // CPA Grip first
-      const cpagripOffers = await fetchCPAGripOffers();
-      if (cpagripOffers.length) {
-        // batch DOM updates with a fragment
+      const cpagrip = await fetchCPAGripOffers();
+      if (cpagrip.length) {
         const frag = document.createDocumentFragment();
-        cpagripOffers.forEach(o => frag.appendChild(createCPAGripCard(o)));
-        offerList.appendChild(frag);
+        cpagrip.forEach(o => frag.appendChild(createCPAGripCard(o)));
+        cpagripList.appendChild(frag);
+      } else {
+        cpagripList.innerHTML = `<div class="no-offers">${isArabic ? texts.ar.noOffers : texts.en.noOffers}</div>`;
       }
 
-      // then OGAds
-      const ogadsOffers = await fetchOgadsOffers();
-      if (ogadsOffers.length) {
+      const ogads = await fetchOgadsOffers();
+      if (ogads.length) {
         const frag2 = document.createDocumentFragment();
-        ogadsOffers.forEach(o => frag2.appendChild(createOgadsCard(o)));
-        offerList.appendChild(frag2);
+        ogads.forEach(o => frag2.appendChild(createOgadsCard(o)));
+        ogadsList.appendChild(frag2);
+      } else {
+        ogadsList.innerHTML = `<div class="no-offers">${isArabic ? texts.ar.noOffers : texts.en.noOffers}</div>`;
       }
 
       loading.style.display = "none";
-      if (!cpagripOffers.length && !ogadsOffers.length) {
-        const noEl = document.createElement("div");
-        noEl.className = "no-offers";
-        noEl.textContent = (isArabic ? texts.ar.noOffers : texts.en.noOffers);
-        offerList.appendChild(noEl);
-      }
     }
 
-    // start
-    loadOffersSequential();
+    loadOffers();
   </script>
 </body>
 </html>
