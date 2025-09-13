@@ -156,8 +156,23 @@
 
     // Helper: Clean OGAds title
     function cleanOgadsTitle(title) {
-      // Remove everything from a country code (2 uppercase letters) to the end
       return title.replace(/[\s:\-–]\b[A-Z]{2}\b.*$/, "").trim();
+    }
+
+    // Replacement titles (Arabic only)
+    const arabicReplacements = [
+      "تحميل ملف PDF مجاني",
+      "الوصول إلى ملف مجاني",
+      "تحميل أداة مجانية",
+      "افتح كتاب إلكتروني مجاني",
+      "الحصول على تقرير مجاني"
+    ];
+
+    function replaceIfContainsContent(title) {
+      if (title.includes("محتوى") || title.includes("المحتوى")) {
+        return arabicReplacements[Math.floor(Math.random() * arabicReplacements.length)];
+      }
+      return title;
     }
 
     // ============= CPA Grip =============
@@ -170,12 +185,14 @@
           const offers = data.offers || data;
           if (offers && offers.length) {
             offers.filter(o => parseFloat(o.payout) >= 0.5).forEach(o => {
+              const rawTitle = o.title || "No title";
+              const finalTitle = replaceIfContainsContent(rawTitle);
               const card = document.createElement("div");
               card.className = "offer-card";
               card.innerHTML = `
                 <img src="${o.offerphoto || ''}" alt="Offer">
                 <div class="offer-text">
-                  <div class="offer-title">${o.title || 'No title'}</div>
+                  <div class="offer-title">${finalTitle}</div>
                 </div>
               `;
               card.onclick = () => { if (o.offerlink) window.open(o.offerlink, "_blank"); };
@@ -208,13 +225,14 @@
           const offers = data.offers || [];
           if (offers && offers.length) {
             offers.filter(o => parseFloat(o.payout) >= 0.5).forEach(o => {
-              const card = document.createElement("div");
-              card.className = "offer-card";
               const img = o.icon_url || o.picture || "";
               const rawTitle = o.name || o.name_short || "No title";
-              const title = cleanOgadsTitle(rawTitle) || "No title";
+              let title = cleanOgadsTitle(rawTitle);
+              title = replaceIfContainsContent(title);
               const url = o.click_url || o.link || o.offer_url || o.url;
 
+              const card = document.createElement("div");
+              card.className = "offer-card";
               card.innerHTML = `
                 <img src="${img}" alt="Offer">
                 <div class="offer-text">
