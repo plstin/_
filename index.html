@@ -177,11 +177,12 @@
       }
     }
 
-    // ================= Offer loading =================
+    // ================= Offer handling =================
     const container = document.getElementById("offers-container");
     let allOffers = [];
 
-    function addOfferCard(img, title, url, payout) {
+    function addOfferCard(img, title, url, payoutRaw) {
+      const payout = parseFloat(payoutRaw) || 0;
       const card = document.createElement("div");
       card.className = "offer-card";
       card.innerHTML = `
@@ -191,15 +192,16 @@
         </div>
       `;
       card.onclick = () => { if (url) window.open(url, "_blank"); };
-      card.dataset.payout = parseFloat(payout) || 0;
+      card.dataset.payout = payout;
       allOffers.push(card);
     }
 
     function renderOffers() {
       container.innerHTML = "";
+      // sort descending by payout
       allOffers.sort((a, b) => parseFloat(b.dataset.payout) - parseFloat(a.dataset.payout));
       if (isArabic) {
-        allOffers.reverse(); // highest payout on top-right in RTL grid
+        allOffers.reverse(); // put highest payout top-right
       }
       allOffers.forEach(card => container.appendChild(card));
     }
@@ -218,7 +220,7 @@
               .forEach(o => {
                 const rawTitle = o.title || "No title";
                 const finalTitle = replaceIfContainsContent(rawTitle);
-                addOfferCard(o.offerphoto || "", finalTitle, o.offerlink, o.payout);
+                addOfferCard(o.offerphoto || "", finalTitle, o.offerlink, o.default_payout);
               });
             renderOffers();
           }
@@ -255,7 +257,7 @@
               let title = cleanOgadsTitle(rawTitle);
               title = replaceIfContainsContent(title);
               const url = o.click_url || o.link || o.offer_url || o.url;
-              addOfferCard(img, title, url, o.payout || 0);
+              addOfferCard(img, title, url, o.payout);
             });
           renderOffers();
         }
