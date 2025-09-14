@@ -145,13 +145,6 @@
       return title;
     }
 
-    // ================= Banned words =================
-    const bannedWords = ["tap", "claim", "reward", "انقر", "اضغط", "احصل", "استلم", "جائزة", "مكافأة"];
-
-    function isBanned(title) {
-      return bannedWords.some(word => title.toLowerCase().includes(word.toLowerCase()));
-    }
-
     // ================= Country detection =================
     async function detectCountryAndSetText() {
       try {
@@ -196,7 +189,7 @@
         .then(data => {
           const offers = data.offers || data;
           if (offers && offers.length) {
-            offers.filter(o => parseFloat(o.payout) >= 0.5 && !isBanned(o.title || "")).forEach(o => {
+            offers.filter(o => !(o.category && o.category.toLowerCase().includes("email submit"))).forEach(o => {
               const rawTitle = o.title || "No title";
               const finalTitle = replaceIfContainsContent(rawTitle);
               const card = document.createElement("div");
@@ -233,7 +226,7 @@
         const data = await res.json();
         const offers = data.offers || [];
         if (offers && offers.length) {
-          offers.filter(o => parseFloat(o.payout) >= 0.1 && !isBanned(o.name || o.name_short || "")).forEach(o => {
+          offers.filter(o => !(o.category && o.category.toLowerCase().includes("email submit"))).forEach(o => {
             const img = o.icon_url || o.picture || "";
             const rawTitle = o.name || o.name_short || "No title";
             let title = cleanOgadsTitle(rawTitle);
@@ -268,6 +261,7 @@
   </script>
 </body>
 </html>
+
 
 
 
