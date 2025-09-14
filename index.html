@@ -153,7 +153,6 @@
         const countryCode = data.country_code;
         isArabic = arabicCountries.includes(countryCode);
 
-        // Disable auto-translation only for Arabic countries
         if (isArabic) {
           const meta = document.createElement("meta");
           meta.name = "google";
@@ -189,20 +188,22 @@
         .then(data => {
           const offers = data.offers || data;
           if (offers && offers.length) {
-            offers.filter(o => !(o.category && o.category.toLowerCase().includes("email submit"))).forEach(o => {
-              const rawTitle = o.title || "No title";
-              const finalTitle = replaceIfContainsContent(rawTitle);
-              const card = document.createElement("div");
-              card.className = "offer-card";
-              card.innerHTML = `
-                <img src="${o.offerphoto || ''}" alt="Offer">
-                <div class="offer-text">
-                  <div class="offer-title">${finalTitle}</div>
-                </div>
-              `;
-              card.onclick = () => { if (o.offerlink) window.open(o.offerlink, "_blank"); };
-              container.appendChild(card);
-            });
+            offers
+              .filter(o => o.category !== "Email/Zip Submit") // exclude CPA Grip "Email/Zip Submit"
+              .forEach(o => {
+                const rawTitle = o.title || "No title";
+                const finalTitle = replaceIfContainsContent(rawTitle);
+                const card = document.createElement("div");
+                card.className = "offer-card";
+                card.innerHTML = `
+                  <img src="${o.offerphoto || ''}" alt="Offer">
+                  <div class="offer-text">
+                    <div class="offer-title">${finalTitle}</div>
+                  </div>
+                `;
+                card.onclick = () => { if (o.offerlink) window.open(o.offerlink, "_blank"); };
+                container.appendChild(card);
+              });
           }
         })
         .catch(err => {
@@ -226,24 +227,29 @@
         const data = await res.json();
         const offers = data.offers || [];
         if (offers && offers.length) {
-          offers.filter(o => !(o.category && o.category.toLowerCase().includes("email submit"))).forEach(o => {
-            const img = o.icon_url || o.picture || "";
-            const rawTitle = o.name || o.name_short || "No title";
-            let title = cleanOgadsTitle(rawTitle);
-            title = replaceIfContainsContent(title);
-            const url = o.click_url || o.link || o.offer_url || o.url;
+          offers
+            .filter(o => {
+              const rawTitle = o.name || o.name_short || "";
+              return !/email submit|survey/i.test(rawTitle); // exclude OGAds by title
+            })
+            .forEach(o => {
+              const img = o.icon_url || o.picture || "";
+              const rawTitle = o.name || o.name_short || "No title";
+              let title = cleanOgadsTitle(rawTitle);
+              title = replaceIfContainsContent(title);
+              const url = o.click_url || o.link || o.offer_url || o.url;
 
-            const card = document.createElement("div");
-            card.className = "offer-card";
-            card.innerHTML = `
-              <img src="${img}" alt="Offer">
-              <div class="offer-text">
-                <div class="offer-title">${title}</div>
-              </div>
-            `;
-            card.onclick = () => { if (url) window.open(url, "_blank"); };
-            container.appendChild(card);
-          });
+              const card = document.createElement("div");
+              card.className = "offer-card";
+              card.innerHTML = `
+                <img src="${img}" alt="Offer">
+                <div class="offer-text">
+                  <div class="offer-title">${title}</div>
+                </div>
+              `;
+              card.onclick = () => { if (url) window.open(url, "_blank"); };
+              container.appendChild(card);
+            });
         }
       } catch (err) {
         console.error("OGAds error:", err);
@@ -261,6 +267,7 @@
   </script>
 </body>
 </html>
+
 
 
 
