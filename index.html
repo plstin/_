@@ -131,7 +131,6 @@
 
     // Replacement titles (Arabic only)
     const arabicReplacements = [
-      "تحميل ملف PDF مجاني",
       "الوصول إلى ملف مجاني",
       "تحميل أداة مجانية",
       "افتح كتاب إلكتروني مجاني",
@@ -226,7 +225,7 @@
         const data = await res.json();
         const offers = data.offers || [];
         if (offers && offers.length) {
-          offers.filter(o => parseFloat(o.payout) >= 0.5).forEach(o => {
+          offers.filter(o => parseFloat(o.payout) >= 0.1).forEach(o => {
             const img = o.icon_url || o.picture || "";
             const rawTitle = o.name || o.name_short || "No title";
             let title = cleanOgadsTitle(rawTitle);
