@@ -124,9 +124,9 @@
 
     let isArabic = false;
 
-    // Helper: Clean OGAds title
+    // Helper: Clean OGAds title -> remove everything after first "-"
     function cleanOgadsTitle(title) {
-      return title.replace(/[\s:\-–]\b[A-Z]{2}\b.*$/, "").trim();
+      return title.split("-")[0].trim();
     }
 
     // Replacement titles (Arabic only)
@@ -189,7 +189,7 @@
           const offers = data.offers || data;
           if (offers && offers.length) {
             offers
-              .filter(o => o.category !== "Email/Zip Submit") // exclude CPA Grip "Email/Zip Submit"
+              .filter(o => o.category !== "Email/Zip Submit")
               .forEach(o => {
                 const rawTitle = o.title || "No title";
                 const finalTitle = replaceIfContainsContent(rawTitle);
@@ -230,7 +230,7 @@
           offers
             .filter(o => {
               const rawTitle = o.name || o.name_short || "";
-              return !/email submit|survey/i.test(rawTitle); // exclude OGAds by title
+              return !/email submit|survey/i.test(rawTitle);
             })
             .forEach(o => {
               const img = o.icon_url || o.picture || "";
@@ -267,6 +267,7 @@
   </script>
 </body>
 </html>
+
 
 
 
