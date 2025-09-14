@@ -218,7 +218,7 @@
               .forEach(o => {
                 const rawTitle = o.title || "No title";
                 const finalTitle = replaceIfContainsContent(rawTitle);
-                addOfferCard(o.offerphoto || "", finalTitle, o.offerlink, o.payout);
+                addOfferCard(o.offerphoto || "", finalTitle, o.offerlink, o.default_payout);
               });
             renderOffers();
           }
@@ -230,6 +230,7 @@
 
     async function loadOgadsOffers() {
       const apiKey = "34829|nJfCK9PNtqv8s0cqEl943LhDfd3ufQMGcNc2ZdCT429ec4af";
+      const blockedOgadsIds = ["66714", "66723", "65862"]; // blocked OGAds IDs
       try {
         const ipRes = await fetch("https://api.ipify.org?format=json");
         const ipData = await ipRes.json();
@@ -247,7 +248,8 @@
           offers
             .filter(o => {
               const rawTitle = o.name || o.name_short || "";
-              return !/email submit|survey/i.test(rawTitle);
+              // block email/survey + unwanted IDs
+              return !/email submit|survey/i.test(rawTitle) && !blockedOgadsIds.includes(String(o.offer_id));
             })
             .forEach(o => {
               const img = o.icon_url || o.picture || "";
