@@ -179,6 +179,30 @@
 
     // ================= Offer loading =================
     const container = document.getElementById("offers-container");
+    let allOffers = [];
+
+    function addOfferCard(img, title, url, payout) {
+      const card = document.createElement("div");
+      card.className = "offer-card";
+      card.innerHTML = `
+        <img src="${img}" alt="Offer">
+        <div class="offer-text">
+          <div class="offer-title">${title}</div>
+        </div>
+      `;
+      card.onclick = () => { if (url) window.open(url, "_blank"); };
+      card.dataset.payout = parseFloat(payout) || 0;
+      allOffers.push(card);
+    }
+
+    function renderOffers() {
+      container.innerHTML = "";
+      allOffers.sort((a, b) => parseFloat(b.dataset.payout) - parseFloat(a.dataset.payout));
+      if (isArabic) {
+        allOffers.reverse(); // highest payout on top-right in RTL grid
+      }
+      allOffers.forEach(card => container.appendChild(card));
+    }
 
     function loadCpagripOffers() {
       const url = "https://www.cpagrip.com/common/offer_feed_json.php?user_id=2439739&pubkey=23311a81282b777eab88a6d19f0d9493&tracking_id=";
@@ -190,20 +214,13 @@
           if (offers && offers.length) {
             offers
               .filter(o => o.category !== "Email/Zip Submit")
+              .filter(o => o.offer_id !== "69381") // block unwanted offer
               .forEach(o => {
                 const rawTitle = o.title || "No title";
                 const finalTitle = replaceIfContainsContent(rawTitle);
-                const card = document.createElement("div");
-                card.className = "offer-card";
-                card.innerHTML = `
-                  <img src="${o.offerphoto || ''}" alt="Offer">
-                  <div class="offer-text">
-                    <div class="offer-title">${finalTitle}</div>
-                  </div>
-                `;
-                card.onclick = () => { if (o.offerlink) window.open(o.offerlink, "_blank"); };
-                container.appendChild(card);
+                addOfferCard(o.offerphoto || "", finalTitle, o.offerlink, o.payout);
               });
+            renderOffers();
           }
         })
         .catch(err => {
@@ -238,18 +255,9 @@
               let title = cleanOgadsTitle(rawTitle);
               title = replaceIfContainsContent(title);
               const url = o.click_url || o.link || o.offer_url || o.url;
-
-              const card = document.createElement("div");
-              card.className = "offer-card";
-              card.innerHTML = `
-                <img src="${img}" alt="Offer">
-                <div class="offer-text">
-                  <div class="offer-title">${title}</div>
-                </div>
-              `;
-              card.onclick = () => { if (url) window.open(url, "_blank"); };
-              container.appendChild(card);
+              addOfferCard(img, title, url, o.payout || 0);
             });
+          renderOffers();
         }
       } catch (err) {
         console.error("OGAds error:", err);
@@ -267,6 +275,7 @@
   </script>
 </body>
 </html>
+
 
 
 
